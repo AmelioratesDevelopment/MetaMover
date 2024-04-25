@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>776</width>
+    <width>672</width>
     <height>583</height>
    </rect>
   </property>
@@ -36,8 +36,8 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>media/folder64.png</normaloff>media/folder64.png</iconset>
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/media/folder64.png</normaloff>:/icons/media/folder64.png</iconset>
                </property>
               </widget>
              </item>
@@ -85,8 +85,8 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>media/folder64.png</normaloff>media/folder64.png</iconset>
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/media/folder64.png</normaloff>:/icons/media/folder64.png</iconset>
                </property>
               </widget>
              </item>
@@ -107,13 +107,13 @@
               <widget class="QLineEdit" name="lineEditOutputDirectory"/>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_2">
+              <widget class="QPushButton" name="pushButtonBrowseOutput">
                <property name="text">
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>media/folder64.png</normaloff>media/folder64.png</iconset>
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/media/folder64.png</normaloff>:/icons/media/folder64.png</iconset>
                </property>
               </widget>
              </item>
@@ -184,8 +184,8 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>media/folder64.png</normaloff>media/folder64.png</iconset>
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/media/folder64.png</normaloff>:/icons/media/folder64.png</iconset>
                </property>
               </widget>
              </item>
@@ -219,6 +219,10 @@
             </property>
             <property name="text">
              <string>Scan for Files</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/media/search.png</normaloff>:/icons/media/search.png</iconset>
             </property>
            </widget>
           </item>
@@ -266,40 +270,56 @@
                <item row="0" column="0">
                 <layout class="QGridLayout" name="gridLayout_4">
                  <item row="1" column="0">
-                  <widget class="QLabel" name="label_5">
+                  <widget class="QLabel" name="labelHasEXIFData">
                    <property name="text">
                     <string>Files containing EXIF data:</string>
                    </property>
                   </widget>
                  </item>
                  <item row="2" column="0">
-                  <widget class="QLabel" name="label_6">
+                  <widget class="QLabel" name="labelHasEXIFDataWDate">
                    <property name="text">
                     <string>Valid creation date in EXIF data:</string>
                    </property>
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="QLineEdit" name="lineEdit_5"/>
+                  <widget class="QLineEdit" name="lineEditFilesFound">
+                   <property name="readOnly">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
                  </item>
                  <item row="2" column="1">
-                  <widget class="QLineEdit" name="lineEdit_7"/>
+                  <widget class="QLineEdit" name="lineEditHasEXIFDataWDate">
+                   <property name="readOnly">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
                  </item>
                  <item row="3" column="1">
-                  <widget class="QLineEdit" name="lineEdit_8"/>
+                  <widget class="QLineEdit" name="lineEditHasEXIFDataNoDate">
+                   <property name="readOnly">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QLineEdit" name="lineEdit_6"/>
+                  <widget class="QLineEdit" name="lineEditHadEXIFData">
+                   <property name="readOnly">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
                  </item>
                  <item row="0" column="0">
-                  <widget class="QLabel" name="label_3">
+                  <widget class="QLabel" name="labelFilesFound">
                    <property name="text">
                     <string>Files Found:</string>
                    </property>
                   </widget>
                  </item>
                  <item row="3" column="0">
-                  <widget class="QLabel" name="label_7">
+                  <widget class="QLabel" name="labelHasEXIFDataNoDate">
                    <property name="text">
                     <string>Has EXIF data without valid Date:</string>
                    </property>
@@ -561,7 +581,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>776</width>
+     <width>672</width>
      <height>17</height>
     </rect>
    </property>
@@ -586,6 +606,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
