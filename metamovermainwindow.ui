@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MetaMoverMainWindow</string>
+   <string>MetaMover</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/icons/media/MetaMoverIcon_White.png</normaloff>:/icons/media/MetaMoverIcon_White.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_8">
@@ -46,9 +50,9 @@
            <item row="1" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <item>
-              <widget class="QCheckBox" name="checkBoxInvalidMetaMove">
+              <widget class="QCheckBox" name="checkBoxIncludeSubDir">
                <property name="text">
-                <string>If File Meta is Invalid, Move to Folder:</string>
+                <string>Include Sub-Directories</string>
                </property>
               </widget>
              </item>
@@ -66,9 +70,9 @@
               </spacer>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBoxIncludeSubDir">
+              <widget class="QCheckBox" name="checkBoxInvalidMetaMove">
                <property name="text">
-                <string>Include Sub-Directories</string>
+                <string>If File Meta is Invalid, Move to Folder:</string>
                </property>
               </widget>
              </item>
@@ -142,26 +146,13 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
-               <item>
-                <property name="text">
-                 <string>Add 'Copy###' and Move/Copy</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Do not move or copy </string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Overwrite</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Move to folder</string>
-                </property>
-               </item>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelDuplicatesDir">
+               <property name="text">
+                <string>Duplicates Folder:</string>
+               </property>
               </widget>
              </item>
             </layout>
@@ -169,17 +160,10 @@
            <item row="2" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout_4">
              <item>
-              <widget class="QLabel" name="label_2">
-               <property name="text">
-                <string>Duplicates Folder</string>
-               </property>
-              </widget>
+              <widget class="QLineEdit" name="lineEditDuplicatesDir"/>
              </item>
              <item>
-              <widget class="QLineEdit" name="lineEdit_3"/>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButton_3">
+              <widget class="QPushButton" name="pushButtonDuplicatesDirBrowse">
                <property name="text">
                 <string/>
                </property>
@@ -356,7 +340,7 @@
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QComboBox" name="comboBox"/>
+                <widget class="QComboBox" name="comboBoxPhotoOutputFolderStructure"/>
                </item>
                <item row="2" column="0">
                 <widget class="QLabel" name="label_12">
@@ -366,21 +350,24 @@
                 </widget>
                </item>
                <item row="3" column="0">
-                <widget class="QRadioButton" name="radioButton">
+                <widget class="QRadioButton" name="radioButtonPhotosDupeSettingFileNameMatch">
                  <property name="text">
                   <string>File Names Match</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
                <item row="4" column="0">
-                <widget class="QRadioButton" name="radioButton_2">
+                <widget class="QRadioButton" name="radioButtonPhotosDupeSettingEXIFAndFileNameMatch">
                  <property name="text">
                   <string>All EXIF and Exact File Contents Match</string>
                  </property>
                 </widget>
                </item>
                <item row="5" column="0">
-                <widget class="QCheckBox" name="checkBox">
+                <widget class="QCheckBox" name="checkBoxPhotoReplaceDashesWithUnderScores">
                  <property name="text">
                   <string>Replace dashes with underscores</string>
                  </property>
@@ -554,13 +541,6 @@
               </layout>
              </item>
             </layout>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string/>
-            </property>
            </widget>
           </item>
          </layout>

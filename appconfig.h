@@ -2,6 +2,7 @@
 #define APPCONFIG_H
 
 #include <string>
+#include <vector>
 
 /*****************************
  * Author: Blake Azuela
@@ -22,8 +23,26 @@ private:
 
     // Constructor and Destructor
     AppConfig() : sourceDirectory(""), outputDirectory(""), invalidFileMetaDirectory(""),
-        duplicatesDirectory(""), moveInvalidFileMeta(false), includeSubDirectories(false),
-        duplicatesFoundSelection(0), photosOutputFolderStructureSelection(0) {}
+        duplicatesDirectory(""), duplicatesFoundSelection(""), photosOutputFolderStructureSelection(""),
+        moveInvalidFileMeta(false), includeSubDirectories(false) {
+        duplicatesFoundOptions = {
+            "Add 'Copy##' and Move/Copy",
+            "Do Not Move or Copy",
+            "Overwrite",
+            "Move To Folder"
+        };
+        mediaOutputFolderStructureOptions = {
+            "Year",
+            "Month",
+            "Day",
+            "Year, Month",
+            "Year, Month, Day",
+            "Year, Month, Day, Camera Model",
+            "Camera Model, Year",
+            "Camera Model, Year, Month",
+            "Camera Model, Year, Month, Day"
+        };
+    }
     ~AppConfig() {}
 
     // Configuration Variables
@@ -31,10 +50,19 @@ private:
     std::string outputDirectory;
     std::string invalidFileMetaDirectory;
     std::string duplicatesDirectory;
+    std::string duplicatesFoundSelection;
     bool moveInvalidFileMeta;
     bool includeSubDirectories;
-    int duplicatesFoundSelection;
-    int photosOutputFolderStructureSelection;
+
+    //Options - Photo Specific
+    std::string photosOutputFolderStructureSelection;
+    std::string photosDuplicateIdentitiySetting;
+    bool photosReplaceDashesWithUnderscores;
+
+    // Vector to store options for handling duplicates
+    std::vector<std::string> duplicatesFoundOptions;
+    // Vector to store options for handling media folder stucture config
+    std::vector<std::string> mediaOutputFolderStructureOptions;
 
 public:
 
@@ -67,17 +95,26 @@ public:
     std::string getDuplicatesDirectory() const { return duplicatesDirectory; }
     void setDuplicatesDirectory(const std::string &value) { duplicatesDirectory = value; }
 
+    std::string getDuplicatesFoundSelection() const { return duplicatesFoundSelection; }
+    void setDuplicatesFoundSelection(std::string &value) { duplicatesFoundSelection = value; }
+
+    std::string getPhotosOutputFolderStructureSelection() const { return photosOutputFolderStructureSelection; }
+    void setPhotosOutputFolderStructureSelection(std::string &value) { photosOutputFolderStructureSelection = value; }
+
+    std::string getPhotosDuplicateIdentitySetting() const { return photosDuplicateIdentitiySetting; }
+    void setPhotosDuplicateIdentitySetting(std::string &value) { photosDuplicateIdentitiySetting = value; }
+
     bool getMoveInvalidFileMeta() const { return moveInvalidFileMeta; }
     void setMoveInvalidFileMeta(bool value) { moveInvalidFileMeta = value; }
 
     bool getIncludeSubDirectories() const { return includeSubDirectories; }
     void setIncludeSubDirectories(bool value) { includeSubDirectories = value; }
 
-    int getDuplicatesFoundSelection() const { return duplicatesFoundSelection; }
-    void setDuplicatesFoundSelection(int value) { duplicatesFoundSelection = value; }
+    bool getPhotosReplaceDashesWithUnderscores() const { return photosReplaceDashesWithUnderscores; }
+    void setPhotosReplaceDashesWithUnderscores(bool value) { photosReplaceDashesWithUnderscores = value; }
 
-    int getPhotosOutputFolderStructureSelection() const { return photosOutputFolderStructureSelection; }
-    void setPhotosOutputFolderStructureSelection(int value) { photosOutputFolderStructureSelection = value; }
+    const std::vector<std::string>& getDuplicatesFoundOptions() const { return duplicatesFoundOptions; }
+    const std::vector<std::string>& getMediaOutputFolderStructureOptions() const { return mediaOutputFolderStructureOptions; }
 };
 
 #endif // APPCONFIG_H

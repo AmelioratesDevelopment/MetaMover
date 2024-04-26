@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>media/folder64.png</file>
+        <file>media/search.png</file>
+        <file>media/MetaMoverIcon_White.png</file>
+    </qresource>
+</RCC>
