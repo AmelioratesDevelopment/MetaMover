@@ -21,18 +21,18 @@ public:
     void setupUiElements();
     void setupIfDuplicatesFoundOptions();
     void setupMediaOutputFolderStructureOptions();
-    void LoadAppConfig();
-    void SaveAppConfig();
-    void SetSourceDirectory(std::string selectedFolder);
-    void SetFileMetaInvalidMoveToFolderCheckbox(bool isChecked);
-    void SetIncludeSubdirectoriesCheckbox(bool isChecked);
-    void SetPhotosDuplicateIdentitySetting(std::string optionSelected);
-    void SetPhotosReplaceDashesWithUnderscoresCheckbox(bool isChecked);
-    void SetOutputDirectory(std::string selectedFolder);
-    void SetOutputDirForInvalidMetaFiles(std::string selectedFolder);
-    void SetOutputDuplicatesDirectory(std::string selectedFolder);
-    void SetIfDuplicatesFoundSelection(std::string optionSelected);
-    void SetPhotosOutputFolderStructureSelection(std::string optionSelected);
+    void loadAppConfig();
+    void saveAppConfig();
+    void setSourceDirectory(std::string selectedFolder);
+    void setFileMetaInvalidMoveToFolderCheckbox(bool isChecked);
+    void setIncludeSubdirectoriesCheckbox(bool isChecked);
+    void setPhotosDuplicateIdentitySetting(std::string optionSelected);
+    void setPhotosReplaceDashesWithUnderscoresCheckbox(bool isChecked);
+    void setOutputDirectory(std::string selectedFolder);
+    void setOutputDirForInvalidMetaFiles(std::string selectedFolder);
+    void setOutputDuplicatesDirectory(std::string selectedFolder);
+    void setIfDuplicatesFoundSelection(std::string optionSelected);
+    void setPhotosOutputFolderStructureSelection(std::string optionSelected);
 
     std::string launchDirectoryBrowser(std::string dialogTitle, std::string failMsg);
 
