@@ -123,3 +123,4 @@ CMakeLists.txt.user*
 *.exe
 
 build/
+.vscode/

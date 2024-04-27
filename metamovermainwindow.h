@@ -2,6 +2,9 @@
 #define METAMOVERMAINWINDOW_H
 
 #include <QMainWindow>
+#include <QDir>
+#include <QElapsedTimer>
+#include "scanner.h"
 #include "appconfigmanager.h"
 
 QT_BEGIN_NAMESPACE
@@ -14,15 +17,25 @@ class MetaMoverMainWindow : public QMainWindow
 {
     Q_OBJECT
 
-public:
-    explicit MetaMoverMainWindow(QWidget *parent = nullptr);
-    ~MetaMoverMainWindow();
+private:
+    // Class Variables
+    Ui::MetaMoverMainWindow *ui;
+    AppConfigManager appConfigManager;
+    Scanner *appScanner;
+    bool lockSlots;
+    static QElapsedTimer timer;
 
+    // Class Functions
     void setupUiElements();
     void setupIfDuplicatesFoundOptions();
     void setupMediaOutputFolderStructureOptions();
     void loadAppConfig();
     void saveAppConfig();
+    std::string launchDirectoryBrowser(std::string dialogTitle,
+                                       std::string failMsg,
+                                       std::string startingDir = QDir::homePath().toStdString());
+
+    // Setters
     void setSourceDirectory(std::string selectedFolder);
     void setFileMetaInvalidMoveToFolderCheckbox(bool isChecked);
     void setIncludeSubdirectoriesCheckbox(bool isChecked);
@@ -34,9 +47,15 @@ public:
     void setIfDuplicatesFoundSelection(std::string optionSelected);
     void setPhotosOutputFolderStructureSelection(std::string optionSelected);
 
-    std::string launchDirectoryBrowser(std::string dialogTitle, std::string failMsg);
+signals:
+    void startScan(const std::string& directoryPath, bool includeSubdirectories);
+
+public:
+    explicit MetaMoverMainWindow(Scanner* scanner, QWidget *parent = nullptr);
+    ~MetaMoverMainWindow();
 
 private slots:
+    void updateFileCountUI(int filesFound);
     void on_pushButtonBrowseSource_clicked();
     void on_pushButtonBrowseOutput_clicked();
     void on_checkBoxInvalidMetaMove_clicked();
@@ -48,10 +67,7 @@ private slots:
     void on_radioButtonPhotosDupeSettingFileNameMatch_clicked();
     void on_radioButtonPhotosDupeSettingEXIFAndFileNameMatch_clicked();
     void on_checkBoxPhotoReplaceDashesWithUnderScores_clicked();
+    void on_pushButtonScan_clicked();
 
-private:
-    bool lockSlots;
-    Ui::MetaMoverMainWindow *ui;
-    AppConfigManager appConfigManager;
 };
 #endif // METAMOVERMAINWINDOW_H

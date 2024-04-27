@@ -21,6 +21,7 @@ private:
 public:
     AppConfig& config;
     explicit AppConfigManager(AppConfig& config);
+    bool scanConfigurationValid(bool showMessage);
     static std::string getExecutablePath();
     static std::string getDefaultConfigPath();
     void save(const std::string& filePath = getDefaultConfigPath());

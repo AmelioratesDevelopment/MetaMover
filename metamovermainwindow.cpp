@@ -7,11 +7,13 @@
 #include "metamovermainwindow.h"
 #include "./ui_metamovermainwindow.h"
 
+QElapsedTimer MetaMoverMainWindow::timer;
 
-MetaMoverMainWindow::MetaMoverMainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MetaMoverMainWindow)
-    , appConfigManager(AppConfig::get())
+MetaMoverMainWindow::MetaMoverMainWindow(Scanner* scanner, QWidget *parent)
+    : QMainWindow(parent),
+    ui(new Ui::MetaMoverMainWindow),
+    appConfigManager(AppConfig::get()),
+    appScanner(scanner)
 {
     lockSlots = true;
     ui->setupUi(this);
@@ -28,6 +30,8 @@ MetaMoverMainWindow::~MetaMoverMainWindow()
 
 void MetaMoverMainWindow::setupUiElements()
 {
+    connect(this, &MetaMoverMainWindow::startScan, appScanner, &Scanner::scan);
+    connect(appScanner, &Scanner::filesFoundUpdated, this, &MetaMoverMainWindow::updateFileCountUI, Qt::QueuedConnection);
     // Initialize Ui Element Models
     this->setupIfDuplicatesFoundOptions();
     this->setupMediaOutputFolderStructureOptions();
@@ -177,11 +181,16 @@ void MetaMoverMainWindow::setPhotosDuplicateIdentitySetting(std::string optionSe
     }
 }
 
-std::string MetaMoverMainWindow::launchDirectoryBrowser(std::string dialogTitle, std::string failMsg)
+std::string MetaMoverMainWindow::launchDirectoryBrowser(std::string dialogTitle,
+                                                        std::string failMsg,
+                                                        std::string startingDir)
 {
+    if(!QDir(QString::fromStdString(startingDir)).exists()){
+        startingDir = QDir::homePath().toStdString();
+    }
     QString selectedFolder = QFileDialog::getExistingDirectory(0,
                                                                QString::fromStdString(dialogTitle),
-                                                               QDir::homePath());
+                                                               QString::fromStdString(startingDir));
     if(selectedFolder.isEmpty()) {return "";} //No folder selected
     if(!QDir(selectedFolder).exists()){
         QMessageBox::critical(this,
@@ -193,11 +202,29 @@ std::string MetaMoverMainWindow::launchDirectoryBrowser(std::string dialogTitle,
     return selectedFolder.toStdString();
 }
 
+
+// observer functions
+void MetaMoverMainWindow::updateFileCountUI(int filesFound) {
+    if (!timer.isValid()) {
+        timer.start();
+    }
+    // Ensure thread-safe UI updates
+    if (timer.elapsed() > 1000) {  // Update UI every second
+        QMetaObject::invokeMethod(this, [this, filesFound]() {
+                ui->lineEditFilesFound->setText(QString::number(filesFound));
+            }, Qt::QueuedConnection);
+        timer.restart();
+    }
+}
+
+
+// ui slots
 void MetaMoverMainWindow::on_pushButtonBrowseSource_clicked()
 {
     if(lockSlots) {return;}
     std::string selectedDir = this->launchDirectoryBrowser("Select Source Directory",
-                                                           "Invalid Source Directory Selection");
+                                                           "Invalid Source Directory Selection",
+                                                           appConfigManager.config.getSourceDirectory());
     // Directory selected is validated - set as source
     if (selectedDir.empty()) {
         return;
@@ -210,7 +237,8 @@ void MetaMoverMainWindow::on_pushButtonBrowseOutput_clicked()
 {
     if(lockSlots) {return;}
     std::string selectedDir = this->launchDirectoryBrowser("Select Output Directory",
-                                                           "Invalid Output Directory Selection");
+                                                           "Invalid Output Directory Selection",
+                                                           appConfigManager.config.getOutputDirectory());
     // Directory selected is validated - set as source
     if (selectedDir.empty()) {
         return;
@@ -223,7 +251,8 @@ void MetaMoverMainWindow::on_pushButtonBrowseInvalidMetaDir_clicked()
 {
     if(lockSlots) {return;}
     std::string selectedDir = this->launchDirectoryBrowser("Select Meta Directory",
-                                                           "Invalid Meta Directory Selection");
+                                                           "Invalid Meta Directory Selection",
+                                                           appConfigManager.config.getInvalidFileMetaDirectory());
     // Directory selected is validated - set as source
     if (selectedDir.empty()) {
         return;
@@ -236,7 +265,8 @@ void MetaMoverMainWindow::on_pushButtonDuplicatesDirBrowse_clicked()
 {
     if(lockSlots) {return;}
     std::string selectedDir = this->launchDirectoryBrowser("Select Duplicates Directory",
-                                                           "Invalid Duplicates Directory Selection");
+                                                           "Invalid Duplicates Directory Selection",
+                                                           appConfigManager.config.getDuplicatesDirectory());
     // Directory selected is validated - set as source
     if (selectedDir.empty()) {
         return;
@@ -284,5 +314,12 @@ void MetaMoverMainWindow::on_radioButtonPhotosDupeSettingEXIFAndFileNameMatch_cl
 void MetaMoverMainWindow::on_checkBoxPhotoReplaceDashesWithUnderScores_clicked()
 {
     setPhotosReplaceDashesWithUnderscoresCheckbox(ui->checkBoxPhotoReplaceDashesWithUnderScores->isChecked());
+}
+
+void MetaMoverMainWindow::on_pushButtonScan_clicked()
+{
+    if(!appConfigManager.scanConfigurationValid(true)){ return; }
+    emit startScan(appConfigManager.config.getSourceDirectory(),
+                    appConfigManager.config.getIncludeSubDirectories());
 }
 
