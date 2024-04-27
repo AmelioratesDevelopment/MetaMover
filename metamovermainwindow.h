@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QDir>
-#include <QElapsedTimer>
 #include "scanner.h"
 #include "appconfigmanager.h"
 
@@ -23,7 +22,6 @@ private:
     AppConfigManager appConfigManager;
     Scanner *appScanner;
     bool lockSlots;
-    static QElapsedTimer timer;
 
     // Class Functions
     void setupUiElements();

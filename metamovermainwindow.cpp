@@ -7,8 +7,6 @@
 #include "metamovermainwindow.h"
 #include "./ui_metamovermainwindow.h"
 
-QElapsedTimer MetaMoverMainWindow::timer;
-
 MetaMoverMainWindow::MetaMoverMainWindow(Scanner* scanner, QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MetaMoverMainWindow),
@@ -205,16 +203,9 @@ std::string MetaMoverMainWindow::launchDirectoryBrowser(std::string dialogTitle,
 
 // observer functions
 void MetaMoverMainWindow::updateFileCountUI(int filesFound) {
-    if (!timer.isValid()) {
-        timer.start();
-    }
-    // Ensure thread-safe UI updates
-    if (timer.elapsed() > 1000) {  // Update UI every second
-        QMetaObject::invokeMethod(this, [this, filesFound]() {
-                ui->lineEditFilesFound->setText(QString::number(filesFound));
-            }, Qt::QueuedConnection);
-        timer.restart();
-    }
+    QMetaObject::invokeMethod(this, [this, filesFound]() {
+            ui->lineEditFilesFound->setText(QString::number(filesFound));
+        }, Qt::QueuedConnection);
 }
 
 
