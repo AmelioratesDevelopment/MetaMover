@@ -1,8 +1,10 @@
 #include "metamovermainwindow.h"
+#include "scanner.h"
 
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
+#include <QThread>
 
 int main(int argc, char *argv[])
 {
@@ -17,7 +19,23 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    MetaMoverMainWindow w;
+
+    // Set up the Scanner in its own thread
+    QThread scannerThread;
+    Scanner* scanner = new Scanner(); // Configure with desired thread pool size
+    scanner->moveToThread(&scannerThread);
+    scannerThread.start();
+
+    // Pass the scanner to the main window
+    MetaMoverMainWindow w(scanner);
     w.show();
-    return a.exec();
+
+    int execResult = a.exec();
+
+    // Clean up the thread
+    scannerThread.quit();
+    scannerThread.wait();
+    delete scanner;
+
+    return execResult;
 }

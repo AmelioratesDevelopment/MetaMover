@@ -4,6 +4,8 @@
 #include <limits>
 #include <string>
 #include <cstddef>
+#include <QDir>
+#include <QMessageBox>
 #include "appconfigmanager.h"
 
 // Windows-specific includes should come after C++ standard library includes
@@ -18,6 +20,20 @@
 AppConfig* AppConfig::ptrInstance = nullptr;
 
 AppConfigManager::AppConfigManager(AppConfig& config) : config(config) {}
+
+bool AppConfigManager::scanConfigurationValid(bool showMessage){
+    if(!QDir(QString::fromStdString(config.getSourceDirectory())).exists()){
+        if(showMessage){
+            QMessageBox::critical(nullptr,
+                                  "Error",
+                                  "Source Directory does not exist. Please correct this.",
+                                  QMessageBox::Ok);
+        }
+        return false;
+    }
+    return true;
+}
+
 
 std::string AppConfigManager::getExecutablePath() {
     char path[1024] = { 0 }; // Adjust size as needed
