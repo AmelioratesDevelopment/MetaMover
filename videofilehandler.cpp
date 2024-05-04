@@ -1,6 +1,8 @@
 #include <iostream>
 #include "videofilehandler.h"
 
+int VideoFileHandler::totalVideoFiles {0};
+
 VideoFileHandler::VideoFileHandler(const std::string& filePath)
     : BasicFileHandler(filePath) {}
 

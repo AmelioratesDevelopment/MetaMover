@@ -33,6 +33,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         photofilehandler.h photofilehandler.cpp
         scanner.h scanner.cpp
         videofilehandler.h videofilehandler.cpp
+        ifilehandler.h
     )
 
 # Define target properties for Android with Qt 6 as:

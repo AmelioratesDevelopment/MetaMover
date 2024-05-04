@@ -1,6 +1,8 @@
 #include <iostream>
 #include "photofilehandler.h"
 
+int PhotoFileHandler::totalPhotoFiles {0};
+
 PhotoFileHandler::PhotoFileHandler(const std::string& filePath)
     : BasicFileHandler(filePath) {}
 

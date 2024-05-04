@@ -1,6 +1,8 @@
 #include <iostream>
 #include "basicfilehandler.h"
 
+int BasicFileHandler::totalBasicFiles{0};
+
 BasicFileHandler::BasicFileHandler(const std::string& filePath)
     : filePath(filePath) {}
 
