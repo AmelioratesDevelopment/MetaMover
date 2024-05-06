@@ -1,21 +1,22 @@
 #ifndef BASICFILEHANDLER_H
 #define BASICFILEHANDLER_H
 
-#include "IFileHandler.h"
+#include "ifilehandler.h"
 #include <string>
 
-class BasicFileHandler : public IF{
+
+class BasicFileHandler : public IFileHandler {
 protected:
     std::string filePath;
 
+
 public:
-    BasicFileHandler(const std::string& filePath);
+    BasicFileHandler(const std::string inputFilePath);
     virtual ~BasicFileHandler();
-    virtual void processFile();
-    static int getTotalBasicFiles();
+    virtual void processFile() override;
 
 private:
-    static int totalBasicFiles;
+    BasicFileHandler() = delete;
 };
 
 #endif // BASICFILEHANDLER_H

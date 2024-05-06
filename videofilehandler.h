@@ -5,12 +5,14 @@
 #include "basicfilehandler.h"
 
 class VideoFileHandler : public BasicFileHandler {
-    private:
-        static int totalVideoFiles;
+protected:
 
-    public:
-        VideoFileHandler(const std::string& filePath);
-        void processFile() override; // Must implement this method.
-        static int getTotalVideoFiles();
+public:
+    VideoFileHandler(const std::string inputFilePath);
+    virtual ~VideoFileHandler();
+    virtual void processFile() override;
+
+private:
+    VideoFileHandler() = delete;
 };
 #endif // VIDEOFILEHANDLER_H

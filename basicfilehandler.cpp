@@ -1,14 +1,13 @@
 #include <iostream>
 #include "basicfilehandler.h"
 
-int BasicFileHandler::totalBasicFiles{0};
+BasicFileHandler::BasicFileHandler(const std::string inputFilePath)
+    : filePath(inputFilePath) {
+}
 
-BasicFileHandler::BasicFileHandler(const std::string& filePath)
-    : filePath(filePath) {}
+BasicFileHandler::~BasicFileHandler() {
+}
 
-BasicFileHandler::~BasicFileHandler() {}
-
-void BasicFileHandler::processFile() {
-    std::cout << "Processing a photo file: " << filePath << std::endl;
-    // Implement photo-specific processing here
+void BasicFileHandler::processFile(){
+    std::cout << "Processing a basic file: " << this->filePath << std::endl;
 }

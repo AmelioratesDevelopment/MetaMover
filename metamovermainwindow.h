@@ -27,8 +27,12 @@ private:
     void setupUiElements();
     void setupIfDuplicatesFoundOptions();
     void setupMediaOutputFolderStructureOptions();
+    void resetScanResults();
+    void toggleScanControls(bool enabled);
+    void toggleTransferControls(bool enabled);
     void loadAppConfig();
     void saveAppConfig();
+    void updateFileCounts();
     std::string launchDirectoryBrowser(std::string dialogTitle,
                                        std::string failMsg,
                                        std::string startingDir = QDir::homePath().toStdString());
@@ -53,7 +57,10 @@ public:
     ~MetaMoverMainWindow();
 
 private slots:
-    void updateFileCountUI(int filesFound);
+    void updateFileCountUI();
+    void showScanResults();
+
+    //ui triggers
     void on_pushButtonBrowseSource_clicked();
     void on_pushButtonBrowseOutput_clicked();
     void on_checkBoxInvalidMetaMove_clicked();

@@ -2,15 +2,24 @@
 #define PHOTOFILEHANDLER_H
 
 #include <string>
-#include "BasicFileHandler.h"
+#include "basicfilehandler.h"
+#include "exif.h"
 
 class PhotoFileHandler : public BasicFileHandler {
-private:
-    static int totalPhotoFiles;
+protected:
 
 public:
-    PhotoFileHandler(const std::string& filePath);
-    static int getTotalPhotoFiles();
-    void processFile() override; // Must implement this method.
+    PhotoFileHandler(const std::string inputFilePath);
+    virtual ~PhotoFileHandler();
+    virtual void processFile() override;
+    bool fileValid;
+    bool containsEXIFData;
+    bool validCreationDataInEXIF;
+    bool hasEXIFDateWODate;
+
+private:
+    void extractEXIFData();
+    easyexif::EXIFInfo exifData;
+    PhotoFileHandler() = delete;
 };
 #endif // PHOTOFILEHANDLER_H

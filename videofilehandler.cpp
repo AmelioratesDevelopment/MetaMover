@@ -1,12 +1,13 @@
 #include <iostream>
 #include "videofilehandler.h"
 
-int VideoFileHandler::totalVideoFiles {0};
+VideoFileHandler::VideoFileHandler(const std::string inputFilePath)
+    : BasicFileHandler(inputFilePath) {
+}
 
-VideoFileHandler::VideoFileHandler(const std::string& filePath)
-    : BasicFileHandler(filePath) {}
+VideoFileHandler::~VideoFileHandler() {
+}
 
-void VideoFileHandler::processFile() {
-    std::cout << "Processing a video file: " << filePath << std::endl;
-    // Implement photo-specific processing here
+void VideoFileHandler::processFile(){
+    std::cout << "Processing a video file: " << this->filePath << std::endl;
 }
