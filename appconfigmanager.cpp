@@ -1,3 +1,16 @@
+/***********************************************************************
+ * File Name: appconfigmanager.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Implementation of AppConfigManager. Includes methods to
+ *              save and load configuration settings from a file, validate
+ *              the configuration's viability based on directory existence,
+ *              and handle file paths for configuration storage. It works
+ *              closely with the AppConfig singleton to manage application
+ *              settings comprehensively.
+ * License: MIT License
+ ***********************************************************************/
+
 #define NOMINMAX
 #include <fstream>
 #include <iostream>
@@ -19,8 +32,10 @@
 // AppConfig is a singleton - use config to address and use it
 AppConfig* AppConfig::ptrInstance = nullptr;
 
+// Constructor initializes with a reference to AppConfig instance
 AppConfigManager::AppConfigManager(AppConfig& config) : config(config) {}
 
+// Validates the source directory existence, optionally showing a message box
 bool AppConfigManager::scanConfigurationValid(bool showMessage){
     if(!QDir(QString::fromStdString(config.getSourceDirectory())).exists()){
         if(showMessage){
@@ -34,7 +49,7 @@ bool AppConfigManager::scanConfigurationValid(bool showMessage){
     return true;
 }
 
-
+// Returns the path to the executable, handling differences between Windows and POSIX systems
 std::string AppConfigManager::getExecutablePath() {
     char path[1024] = { 0 }; // Adjust size as needed
 #ifdef _WIN32
@@ -55,6 +70,7 @@ std::string AppConfigManager::getDefaultConfigPath() {
     return getExecutablePath() + "/config.dat"; // default config file name
 }
 
+// Saves the current configuration to the specified file path
 void AppConfigManager::save(const std::string& filePath) {
     std::ofstream outFile(filePath);
     AppConfig& config = AppConfig::get(); // Access the singleton instance
@@ -76,6 +92,7 @@ void AppConfigManager::save(const std::string& filePath) {
     }
 }
 
+// Loads configuration settings from the specified file path
 bool AppConfigManager::load(const std::string& filePath) {
     std::ifstream inFile(filePath);
     if (inFile.is_open()) {

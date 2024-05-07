@@ -1,53 +1,118 @@
+/***********************************************************************
+ * File Name: Scanner.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Implementation of the Scanner class. Provides functionality
+ *              to scan directories recursively and manage file handlers based
+ *              on file type, extracting and processing EXIF and other metadata.
+ *              Includes mechanisms to update the UI periodically with scan
+ *              progress and completion status.
+ * License: MIT License
+ ***********************************************************************/
+
+
 #include "scanner.h"
 #include <filesystem>
 #include <QDebug>
+#include <QDir>
+#include <QString>
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <iostream>
 
 Scanner::Scanner(QObject* parent) : QObject(parent), stopTimer(false) {}
 
 Scanner::~Scanner() {}
 
 void Scanner::scan(const std::string& directoryPath, bool includeSubdirectories) {
-    std::lock_guard<std::mutex> lock(mutex);
-    basicFileHandlers.clear();
     filesFound = 0;
+    photoFilesFoundContainingEXIFData = 0;
+    photoFilesFoundContainingValidCreationDate = 0;
+    photoFilesFoundContainingEXIFWODate = 0;
+    resetScanner();
     stopTimer = false;
-
+    std::lock_guard<std::mutex> lock(mutex);
     // Start timer thread
     std::thread timerThread(&Scanner::emitPeriodically, this);
 
-    auto handlers = scanDirectorySingleThread(directoryPath, includeSubdirectories);
-    basicFileHandlers = std::move(handlers);
+    scanDirectory(directoryPath, includeSubdirectories);
 
     // Stop timer thread and ensure final emit
     stopTimer = true;
     timerThread.join();
-    emitFilesFound(filesFound.load());
+    emit filesFoundUpdated(filesFound.load());
+    emit scanCompleted();
 }
 
-std::vector<std::unique_ptr<BasicFileHandler>> Scanner::scanDirectorySingleThread(const std::string& directoryPath, bool includeSubdirectories) {
-    std::vector<std::unique_ptr<BasicFileHandler>> handlers;
+void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdirectories) {
     for (const auto& entry : std::filesystem::directory_iterator(directoryPath)) {
+        std::string path = QString(QDir::toNativeSeparators(QString::fromStdString(entry.path().string()))).toStdString();
         if (entry.is_directory() && includeSubdirectories) {
-            auto subdirHandlers = scanDirectorySingleThread(entry.path().string(), true);
-            handlers.insert(handlers.end(), std::make_move_iterator(subdirHandlers.begin()), std::make_move_iterator(subdirHandlers.end()));
+            scanDirectory(path, true);
         } else if (!entry.is_directory()) {
-            handlers.push_back(std::make_unique<BasicFileHandler>(entry.path().string()));
+            auto handler = fileFactory.makeFileHandler(path);
+            // Use dynamic_cast to check the actual derived type of the handler
+            if (auto* pVideoHandler = dynamic_cast<VideoFileHandler*>(handler.get())) {
+                videoFileHandlers.push_back(std::unique_ptr<VideoFileHandler>(pVideoHandler));
+            } else if (auto* pPhotoHandler = dynamic_cast<PhotoFileHandler*>(handler.get())) {
+                if(pPhotoHandler->containsEXIFData) photoFilesFoundContainingEXIFData++;
+                if(pPhotoHandler->validCreationDataInEXIF) photoFilesFoundContainingValidCreationDate++;
+                if(pPhotoHandler->hasEXIFDateWODate) photoFilesFoundContainingEXIFWODate++;
+                photoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
+            } else if (auto* pBasicHandler = dynamic_cast<BasicFileHandler*>(handler.get())) { // fallback to the basic type
+                basicFileHandlers.push_back(std::unique_ptr<BasicFileHandler>(pBasicHandler));
+            } else {
+                std::cout << "Unknown handler type for file: " << path << std::endl;
+            }
+
+            handler.release();
             filesFound++;
         }
     }
-    return handlers;
 }
 
-void Scanner::emitFilesFound(int count) {
-    emit filesFoundUpdated(count);
+void Scanner::resetScanner()
+{
+    basicFileHandlers.clear();
+    photoFileHandlers.clear();
+    videoFileHandlers.clear();
 }
+
+int const Scanner::getTotalFilesFound()
+{
+    int total = 0;
+    total += static_cast<int>(basicFileHandlers.size());
+    total += static_cast<int>(photoFileHandlers.size());
+    total += static_cast<int>(videoFileHandlers.size());
+    return total;
+}
+
+int const Scanner::getTotalPhotoFilesFound()
+{
+    return static_cast<int>(photoFileHandlers.size());
+}
+
+int const Scanner::getPhotoFilesFoundContainingEXIFData()
+{
+    return photoFilesFoundContainingEXIFData;
+}
+
+int const Scanner::getPhotoFilesFoundContainingValidCreationDate()
+{
+    return photoFilesFoundContainingValidCreationDate;
+}
+
+int const Scanner::getPhotoFilesFoundContainingEXIFWODate()
+{
+    return photoFilesFoundContainingEXIFWODate;
+}
+
+
 
 void Scanner::emitPeriodically() {
     while (!stopTimer) {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        emitFilesFound(filesFound.load());
+        emit filesFoundUpdated(filesFound.load());
     }
 }
