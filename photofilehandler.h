@@ -1,7 +1,20 @@
 #ifndef PHOTOFILEHANDLER_H
 #define PHOTOFILEHANDLER_H
 
+/***********************************************************************
+ * File Name: photofilehandler.h
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Header file for the PhotoFileHandler class, derived from
+ *              BasicFileHandler. This class specifically handles image files,
+ *              extracting EXIF data and evaluating it for metadata validity,
+ *              including the original creation date and camera model information.
+ * License: MIT License
+ ***********************************************************************/
+
+
 #include <string>
+#include <chrono>
 #include "basicfilehandler.h"
 #include "exif.h"
 
@@ -18,7 +31,10 @@ public:
     bool hasEXIFDateWODate;
 
 private:
+    void parseDateTime(const std::string& dateTimeStr);
     void extractEXIFData();
+    std::chrono::system_clock::time_point originalDateTime;
+    std::string cameraModel;
     easyexif::EXIFInfo exifData;
     PhotoFileHandler() = delete;
 };

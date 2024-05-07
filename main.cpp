@@ -1,3 +1,14 @@
+/***********************************************************************
+ * File Name: main.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: This file sets up the QApplication for the MetaMover project,
+ *              loads language translations, and initializes the main GUI
+ *              window and scanner functionality on separate threads to
+ *              enhance UI responsiveness.
+ * License: MIT License
+ ***********************************************************************/
+
 #include "metamovermainwindow.h"
 #include "scanner.h"
 

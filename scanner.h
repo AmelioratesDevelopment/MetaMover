@@ -1,6 +1,19 @@
 #ifndef SCANNER_H
 #define SCANNER_H
 
+/***********************************************************************
+ * File Name: Scanner.h
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Header file for the Scanner class, responsible for scanning
+ *              directories and processing files to extract metadata such as
+ *              EXIF data. This class manages the identification of different
+ *              file types and collects relevant data to determine handling
+ *              strategies for file transfers or copies.
+ * License: MIT License
+ ***********************************************************************/
+
+
 #include <QObject>
 #include <vector>
 #include <memory>

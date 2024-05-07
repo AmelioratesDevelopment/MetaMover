@@ -1,7 +1,21 @@
+/***********************************************************************
+ * File Name: photofilehandler.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Implementation of the PhotoFileHandler class. Processes image
+ *              files to extract and evaluate EXIF data. Provides detailed
+ *              output on the EXIF content and determines the file's validity
+ *              based on specific metadata criteria.
+ * License: MIT License
+ ***********************************************************************/
+
+
 #include <iostream>
 #include <string>
-#include <cstdio>
+#include <cstdio> // this includes supports the section below for EXIF output
+#include <sstream>
 #include <fstream>
+#include <iomanip>
 #include <vector>
 #include "photofilehandler.h"
 #include "exif.h"
@@ -52,7 +66,10 @@ void PhotoFileHandler::extractEXIFData(){
         return;
     }
     containsEXIFData = true;
-    /**
+    parseDateTime(exifData.DateTimeOriginal.c_str());
+    cameraModel = exifData.Model.c_str();
+
+    /* Below is an example of all that can be pulled from exif data
     printf("Camera make          : %s\n", exifData.Make.c_str());
     printf("Camera model         : %s\n", exifData.Model.c_str());
     printf("Software             : %s\n", exifData.Software.c_str());
@@ -99,5 +116,25 @@ void PhotoFileHandler::extractEXIFData(){
     printf("Lens model           : %s\n", exifData.LensInfo.Model.c_str());
     printf("Focal plane XRes     : %f\n", exifData.LensInfo.FocalPlaneXResolution);
     printf("Focal plane YRes     : %f\n", exifData.LensInfo.FocalPlaneYResolution);
-    **/
+    */
+}
+
+void PhotoFileHandler::parseDateTime(const std::string& dateTimeStr) {
+    std::istringstream iss(dateTimeStr);
+    std::tm dateTime = {};
+
+    if (iss >> std::get_time(&dateTime, "%Y:%m:%d %H:%M:%S")) {
+        // Successfully parsed the date and time
+        dateTime.tm_isdst = -1;  // Not setting DST
+        auto time_c = std::mktime(&dateTime);
+        if (time_c != -1) {
+            originalDateTime = std::chrono::system_clock::from_time_t(time_c);
+            validCreationDataInEXIF = true;
+            hasEXIFDateWODate = false;
+            return;
+        }
+    }
+    // Parsing failed or conversion to time_point failed
+    validCreationDataInEXIF = false;
+    hasEXIFDateWODate = true;
 }

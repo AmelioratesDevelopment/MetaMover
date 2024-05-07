@@ -1,3 +1,15 @@
+/***********************************************************************
+ * File Name: MetaMoverMainWindow.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Implementation of MetaMoverMainWindow class. This file
+ *              handles the instantiation and management of UI components,
+ *              event slots, and the integration of the Scanner functionality
+ *              with the UI, emphasizing the separation of UI management from
+ *              data control logic.
+ * License: MIT License
+ ***********************************************************************/
+
 #include <QFileDialog>
 #include <QString>
 #include <QDir>

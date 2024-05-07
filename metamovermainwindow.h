@@ -1,6 +1,18 @@
 #ifndef METAMOVERMAINWINDOW_H
 #define METAMOVERMAINWINDOW_H
 
+/***********************************************************************
+ * File Name: MetaMoverMainWindow.h
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Header file for the MetaMoverMainWindow class, which manages
+ *              the user interface for the MetaMover application. This class
+ *              includes setups for UI components, event handling for user
+ *              interactions, and configurations for file and directory
+ *              management options within the UI.
+ * License: MIT License
+ ***********************************************************************/
+
 #include <QMainWindow>
 #include <QDir>
 #include "scanner.h"

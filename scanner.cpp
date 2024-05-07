@@ -1,3 +1,16 @@
+/***********************************************************************
+ * File Name: Scanner.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Implementation of the Scanner class. Provides functionality
+ *              to scan directories recursively and manage file handlers based
+ *              on file type, extracting and processing EXIF and other metadata.
+ *              Includes mechanisms to update the UI periodically with scan
+ *              progress and completion status.
+ * License: MIT License
+ ***********************************************************************/
+
+
 #include "scanner.h"
 #include <filesystem>
 #include <QDebug>
@@ -35,8 +48,6 @@ void Scanner::scan(const std::string& directoryPath, bool includeSubdirectories)
 void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdirectories) {
     for (const auto& entry : std::filesystem::directory_iterator(directoryPath)) {
         std::string path = QString(QDir::toNativeSeparators(QString::fromStdString(entry.path().string()))).toStdString();
-        //std::replace(path.begin(), path.end(), '\\', '/');
-        path = escapeBackslashes(path);
         if (entry.is_directory() && includeSubdirectories) {
             scanDirectory(path, true);
         } else if (!entry.is_directory()) {
@@ -46,7 +57,7 @@ void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdir
                 videoFileHandlers.push_back(std::unique_ptr<VideoFileHandler>(pVideoHandler));
             } else if (auto* pPhotoHandler = dynamic_cast<PhotoFileHandler*>(handler.get())) {
                 if(pPhotoHandler->containsEXIFData) photoFilesFoundContainingEXIFData++;
-                if(pPhotoHandler->validCreationDataInEXIF) photoFilesFoundContainingEXIFData++;
+                if(pPhotoHandler->validCreationDataInEXIF) photoFilesFoundContainingValidCreationDate++;
                 if(pPhotoHandler->hasEXIFDateWODate) photoFilesFoundContainingEXIFWODate++;
                 photoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
             } else if (auto* pBasicHandler = dynamic_cast<BasicFileHandler*>(handler.get())) { // fallback to the basic type
@@ -59,16 +70,6 @@ void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdir
             filesFound++;
         }
     }
-}
-
-std::string Scanner::escapeBackslashes(const std::string& input) {
-    std::string output = input;
-    size_t position = 0;
-    while ((position = output.find("\\", position)) != std::string::npos) {
-        output.replace(position, 1, "\\\\");
-        position += 2;  // Move past the inserted backslash
-    }
-    return output;
 }
 
 void Scanner::resetScanner()
