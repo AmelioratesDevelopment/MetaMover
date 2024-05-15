@@ -28,6 +28,10 @@ class Scanner : public QObject {
 
 public:
     explicit Scanner(QObject* parent = nullptr);
+    bool checkScanResults(bool showMessage);
+    std::string sanitizeFilePath(const std::string& path);
+    std::vector<std::unique_ptr<PhotoFileHandler>>& getPhotoFileHandlers();
+    std::vector<std::unique_ptr<PhotoFileHandler>>& getInvalidPhotoFileHandlers();
     int const getTotalFilesFound();
     int const getTotalPhotoFilesFound();
     int const getPhotoFilesFoundContainingEXIFData();
@@ -53,6 +57,7 @@ private:
     std::atomic<int> photoFilesFoundContainingEXIFWODate{0};
     std::vector<std::unique_ptr<BasicFileHandler>> basicFileHandlers;
     std::vector<std::unique_ptr<PhotoFileHandler>> photoFileHandlers;
+    std::vector<std::unique_ptr<PhotoFileHandler>> invalidPhotoFileHandlers;
     std::vector<std::unique_ptr<VideoFileHandler>> videoFileHandlers;
     std::mutex mutex;
     std::atomic<bool> stopTimer;

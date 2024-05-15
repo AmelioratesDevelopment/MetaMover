@@ -28,7 +28,11 @@ public:
     bool fileValid;
     bool containsEXIFData;
     bool validCreationDataInEXIF;
-    bool hasEXIFDateWODate;
+    std::chrono::system_clock::time_point getOriginalDateTime();
+    std::chrono::time_point<std::chrono::system_clock> getFileCreationTime() const;
+    std::string getCameraModel();
+    easyexif::EXIFInfo getExifData();
+    bool overwriteEnabled;
 
 private:
     void parseDateTime(const std::string& dateTimeStr);

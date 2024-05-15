@@ -21,12 +21,16 @@
 class BasicFileHandler : public IFileHandler {
 protected:
     std::string filePath;
-
+    std::string targetFileName;
 
 public:
     BasicFileHandler(const std::string inputFilePath);
-    virtual ~BasicFileHandler();
+    virtual std::string getSourceFilePath() override;
+    virtual std::string getSourceFileName() override;
+    virtual std::string getTargetFileName() override;
+    virtual void setTargetFileName(std::string targetFileName = "") override;
     virtual void processFile() override;
+    virtual ~BasicFileHandler();
 
 private:
     BasicFileHandler() = delete;

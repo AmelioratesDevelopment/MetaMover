@@ -41,6 +41,7 @@ namespace easyexif {
 //
 // Class responsible for storing and parsing EXIF information from a JPEG blob
 //
+
 class EXIFInfo {
  public:
   // Parsing function for an entire JPEG image buffer.
@@ -151,6 +152,9 @@ class EXIFInfo {
     clear();
   }
 };
+
+// Declare the == operator overload
+bool operator==(const EXIFInfo& lhs, const EXIFInfo& rhs);
 
 }
 

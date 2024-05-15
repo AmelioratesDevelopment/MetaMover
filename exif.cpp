@@ -30,6 +30,7 @@
 ***************************************************************************/
 #include "exif.h"
 
+#include <tuple>
 #include <algorithm>
 #include <cstdint>
 #include <stdio.h>
@@ -409,6 +410,60 @@ IFEntry parseIFEntry(const unsigned char *buf, const unsigned offs,
   }
 }
 }
+
+namespace easyexif {
+
+bool operator==(const EXIFInfo& lhs, const EXIFInfo& rhs) {
+    return std::tie(lhs.ByteAlign, lhs.ImageDescription, lhs.Make, lhs.Model,
+                    lhs.Orientation, lhs.BitsPerSample, lhs.Software,
+                    lhs.DateTime, lhs.DateTimeOriginal, lhs.DateTimeDigitized,
+                    lhs.SubSecTimeOriginal, lhs.Copyright, lhs.ExposureTime,
+                    lhs.FNumber, lhs.ExposureProgram, lhs.ISOSpeedRatings,
+                    lhs.ShutterSpeedValue, lhs.ExposureBiasValue, lhs.SubjectDistance,
+                    lhs.FocalLength, lhs.FocalLengthIn35mm, lhs.Flash,
+                    lhs.FlashReturnedLight, lhs.FlashMode, lhs.MeteringMode,
+                    lhs.ImageWidth, lhs.ImageHeight, lhs.GeoLocation.Latitude,
+                    lhs.GeoLocation.Longitude, lhs.GeoLocation.Altitude,
+                    lhs.GeoLocation.AltitudeRef, lhs.GeoLocation.DOP,
+                    lhs.GeoLocation.LatComponents.degrees,
+                    lhs.GeoLocation.LatComponents.minutes,
+                    lhs.GeoLocation.LatComponents.seconds,
+                    lhs.GeoLocation.LatComponents.direction,
+                    lhs.GeoLocation.LonComponents.degrees,
+                    lhs.GeoLocation.LonComponents.minutes,
+                    lhs.GeoLocation.LonComponents.seconds,
+                    lhs.GeoLocation.LonComponents.direction,
+                    lhs.LensInfo.FStopMin, lhs.LensInfo.FStopMax,
+                    lhs.LensInfo.FocalLengthMin, lhs.LensInfo.FocalLengthMax,
+                    lhs.LensInfo.FocalPlaneXResolution, lhs.LensInfo.FocalPlaneYResolution,
+                    lhs.LensInfo.FocalPlaneResolutionUnit, lhs.LensInfo.Make,
+                    lhs.LensInfo.Model) ==
+           std::tie(rhs.ByteAlign, rhs.ImageDescription, rhs.Make, rhs.Model,
+                    rhs.Orientation, rhs.BitsPerSample, rhs.Software,
+                    rhs.DateTime, rhs.DateTimeOriginal, rhs.DateTimeDigitized,
+                    rhs.SubSecTimeOriginal, rhs.Copyright, rhs.ExposureTime,
+                    rhs.FNumber, rhs.ExposureProgram, rhs.ISOSpeedRatings,
+                    rhs.ShutterSpeedValue, rhs.ExposureBiasValue, rhs.SubjectDistance,
+                    rhs.FocalLength, rhs.FocalLengthIn35mm, rhs.Flash,
+                    rhs.FlashReturnedLight, rhs.FlashMode, rhs.MeteringMode,
+                    rhs.ImageWidth, rhs.ImageHeight, rhs.GeoLocation.Latitude,
+                    rhs.GeoLocation.Longitude, rhs.GeoLocation.Altitude,
+                    rhs.GeoLocation.AltitudeRef, rhs.GeoLocation.DOP,
+                    rhs.GeoLocation.LatComponents.degrees,
+                    rhs.GeoLocation.LatComponents.minutes,
+                    rhs.GeoLocation.LatComponents.seconds,
+                    rhs.GeoLocation.LatComponents.direction,
+                    rhs.GeoLocation.LonComponents.degrees,
+                    rhs.GeoLocation.LonComponents.minutes,
+                    rhs.GeoLocation.LonComponents.seconds,
+                    rhs.GeoLocation.LonComponents.direction,
+                    rhs.LensInfo.FStopMin, rhs.LensInfo.FStopMax,
+                    rhs.LensInfo.FocalLengthMin, rhs.LensInfo.FocalLengthMax,
+                    rhs.LensInfo.FocalPlaneXResolution, rhs.LensInfo.FocalPlaneYResolution,
+                    rhs.LensInfo.FocalPlaneResolutionUnit, rhs.LensInfo.Make,
+                    rhs.LensInfo.Model);
+}
+
 
 //
 // Locates the EXIF segment and parses it using parseFromEXIFSegment
@@ -915,4 +970,5 @@ void easyexif::EXIFInfo::clear() {
   LensInfo.FocalPlaneResolutionUnit = 0;
   LensInfo.Make = "";
   LensInfo.Model = "";
+}
 }

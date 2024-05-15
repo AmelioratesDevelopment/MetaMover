@@ -11,6 +11,7 @@
 
 #include "metamovermainwindow.h"
 #include "scanner.h"
+#include "transfermanager.h"
 
 #include <QApplication>
 #include <QLocale>
@@ -37,16 +38,25 @@ int main(int argc, char *argv[])
     scanner->moveToThread(&scannerThread);
     scannerThread.start();
 
+    // Set up the transfer manager on its own thread
+    QThread transferManagerThread;
+    TransferManager *transferManager = new TransferManager(); // Configure with desired thread pool size
+    transferManager->moveToThread(&transferManagerThread);
+    transferManagerThread.start();
+
     // Pass the scanner to the main window
-    MetaMoverMainWindow w(scanner);
+    MetaMoverMainWindow w(scanner, transferManager);
     w.show();
 
     int execResult = a.exec();
 
-    // Clean up the thread
+    // Clean up the threads
     scannerThread.quit();
     scannerThread.wait();
     delete scanner;
+    transferManagerThread.quit();
+    transferManagerThread.wait();
+    delete transferManager;
 
     return execResult;
 }

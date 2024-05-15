@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <filesystem>
 #include "photofilehandler.h"
 #include "exif.h"
 
@@ -25,14 +26,39 @@ PhotoFileHandler::PhotoFileHandler(const std::string inputFilePath)
     fileValid = false;
     containsEXIFData = false;
     validCreationDataInEXIF = false;
-    hasEXIFDateWODate = false;
+    overwriteEnabled = false;
 }
 
 PhotoFileHandler::~PhotoFileHandler() {
 }
 
+std::chrono::system_clock::time_point PhotoFileHandler::getOriginalDateTime(){
+    return originalDateTime;
+}
+
+std::string PhotoFileHandler::getCameraModel(){
+    return cameraModel;
+}
+
+easyexif::EXIFInfo PhotoFileHandler::getExifData(){
+    return exifData;
+}
+
+std::chrono::time_point<std::chrono::system_clock> PhotoFileHandler::getFileCreationTime() const {
+    namespace fs = std::filesystem;
+    fs::path path(filePath);
+
+    auto ftime = fs::last_write_time(path);
+    auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+        ftime - fs::file_time_type::clock::now() + std::chrono::system_clock::now()
+        );
+
+    return sctp;
+}
+
 void PhotoFileHandler::processFile() {
     std::cout << "Processing a photo file: " << filePath << std::endl;
+    setTargetFileName();
     extractEXIFData();
 }
 
@@ -130,11 +156,9 @@ void PhotoFileHandler::parseDateTime(const std::string& dateTimeStr) {
         if (time_c != -1) {
             originalDateTime = std::chrono::system_clock::from_time_t(time_c);
             validCreationDataInEXIF = true;
-            hasEXIFDateWODate = false;
             return;
         }
     }
     // Parsing failed or conversion to time_point failed
     validCreationDataInEXIF = false;
-    hasEXIFDateWODate = true;
 }

@@ -18,6 +18,8 @@
 
 #include <string>
 #include <vector>
+#include <QString>
+#include <QDir>
 
 class AppConfig {
 private:
@@ -84,17 +86,21 @@ public:
         ptrInstance = nullptr;
     }
 
+    std::string convertToNativePath(std::string value) const {
+        return QString(QDir::toNativeSeparators(QString::fromStdString(value))).toStdString();
+    }
+
     // Getters and Setters for each member variable
-    std::string getSourceDirectory() const { return sourceDirectory; }
+    std::string getSourceDirectory() const { return convertToNativePath(sourceDirectory); }
     void setSourceDirectory(const std::string &value) { sourceDirectory = value; }
 
-    std::string getOutputDirectory() const { return outputDirectory; }
+    std::string getOutputDirectory() const { return convertToNativePath(outputDirectory); }
     void setOutputDirectory(const std::string &value) { outputDirectory = value; }
 
-    std::string getInvalidFileMetaDirectory() const { return invalidFileMetaDirectory; }
+    std::string getInvalidFileMetaDirectory() const { return convertToNativePath(invalidFileMetaDirectory); }
     void setInvalidFileMetaDirectory(const std::string &value) { invalidFileMetaDirectory = value; }
 
-    std::string getDuplicatesDirectory() const { return duplicatesDirectory; }
+    std::string getDuplicatesDirectory() const { return convertToNativePath(duplicatesDirectory); }
     void setDuplicatesDirectory(const std::string &value) { duplicatesDirectory = value; }
 
     std::string getDuplicatesFoundSelection() const { return duplicatesFoundSelection; }

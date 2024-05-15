@@ -16,6 +16,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QString>
+#include <QMessageBox>
 #include <chrono>
 #include <thread>
 #include <atomic>
@@ -56,9 +57,21 @@ void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdir
             if (auto* pVideoHandler = dynamic_cast<VideoFileHandler*>(handler.get())) {
                 videoFileHandlers.push_back(std::unique_ptr<VideoFileHandler>(pVideoHandler));
             } else if (auto* pPhotoHandler = dynamic_cast<PhotoFileHandler*>(handler.get())) {
-                if(pPhotoHandler->containsEXIFData) photoFilesFoundContainingEXIFData++;
-                if(pPhotoHandler->validCreationDataInEXIF) photoFilesFoundContainingValidCreationDate++;
-                if(pPhotoHandler->hasEXIFDateWODate) photoFilesFoundContainingEXIFWODate++;
+                if(!pPhotoHandler->containsEXIFData){
+                    invalidPhotoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
+                    handler.release();
+                    filesFound++;
+                    continue;
+                }
+                photoFilesFoundContainingEXIFData++;
+                if(!pPhotoHandler->validCreationDataInEXIF){
+                    photoFilesFoundContainingEXIFWODate++;
+                    invalidPhotoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
+                    handler.release();
+                    filesFound++;
+                    continue;
+                }
+                photoFilesFoundContainingValidCreationDate++;
                 photoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
             } else if (auto* pBasicHandler = dynamic_cast<BasicFileHandler*>(handler.get())) { // fallback to the basic type
                 basicFileHandlers.push_back(std::unique_ptr<BasicFileHandler>(pBasicHandler));
@@ -77,6 +90,28 @@ void Scanner::resetScanner()
     basicFileHandlers.clear();
     photoFileHandlers.clear();
     videoFileHandlers.clear();
+    invalidPhotoFileHandlers.clear();
+}
+
+bool Scanner::checkScanResults(bool showMessage){
+    if(getTotalFilesFound() <= 0){
+        QMessageBox::critical(nullptr,
+                              "Error",
+                              "No Files Found in Scan.",
+                              QMessageBox::Ok);
+        return false;
+    }
+    return true;
+}
+
+std::vector<std::unique_ptr<PhotoFileHandler>>& Scanner::getPhotoFileHandlers()
+{
+    return photoFileHandlers;
+}
+
+std::vector<std::unique_ptr<PhotoFileHandler>>& Scanner::getInvalidPhotoFileHandlers()
+{
+    return invalidPhotoFileHandlers;
 }
 
 int const Scanner::getTotalFilesFound()
@@ -107,8 +142,6 @@ int const Scanner::getPhotoFilesFoundContainingEXIFWODate()
 {
     return photoFilesFoundContainingEXIFWODate;
 }
-
-
 
 void Scanner::emitPeriodically() {
     while (!stopTimer) {

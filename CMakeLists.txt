@@ -37,6 +37,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         videofilehandler.h videofilehandler.cpp
         ifilehandler.h
         filehandlerfactory.h
+        transfermanager.h transfermanager.cpp
+        directorytransfer.h directorytransfer.cpp
     )
 
 # Define target properties for Android with Qt 6 as:
