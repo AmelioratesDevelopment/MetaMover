@@ -16,6 +16,7 @@
 #include <QMainWindow>
 #include <QDir>
 #include "scanner.h"
+#include "transfermanager.h"
 #include "appconfigmanager.h"
 
 QT_BEGIN_NAMESPACE
@@ -33,6 +34,7 @@ private:
     Ui::MetaMoverMainWindow *ui;
     AppConfigManager appConfigManager;
     Scanner *appScanner;
+    TransferManager *transferManager;
     bool lockSlots;
 
     // Class Functions
@@ -65,7 +67,7 @@ signals:
     void startScan(const std::string& directoryPath, bool includeSubdirectories);
 
 public:
-    explicit MetaMoverMainWindow(Scanner* scanner, QWidget *parent = nullptr);
+    explicit MetaMoverMainWindow(Scanner* scanner, TransferManager *transferManager, QWidget *parent = nullptr);
     ~MetaMoverMainWindow();
 
 private slots:
@@ -86,5 +88,6 @@ private slots:
     void on_checkBoxPhotoReplaceDashesWithUnderScores_clicked();
     void on_pushButtonScan_clicked();
 
+    void on_pushButtonPhotoCopy_clicked();
 };
 #endif // METAMOVERMAINWINDOW_H

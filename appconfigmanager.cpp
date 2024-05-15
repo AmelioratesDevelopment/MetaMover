@@ -37,11 +37,30 @@ AppConfigManager::AppConfigManager(AppConfig& config) : config(config) {}
 
 // Validates the source directory existence, optionally showing a message box
 bool AppConfigManager::scanConfigurationValid(bool showMessage){
-    if(!QDir(QString::fromStdString(config.getSourceDirectory())).exists()){
+    if(!checkDirectoryExists(showMessage, config.getSourceDirectory(), "Source")) return false;
+    return true;
+}
+
+bool AppConfigManager::copyConfigurationValid(bool showMessage){
+    if(config.getMoveInvalidFileMeta()){
+        if(!checkDirectoryExists(showMessage, config.getInvalidFileMetaDirectory(), "Invalid File Meta")) return false;
+    }
+    if(config.getDuplicatesFoundSelection() == "Move To Folder"){
+        if(!checkDirectoryExists(showMessage, config.getDuplicatesDirectory(), "Invalid Duplicates")) return false;
+    }
+    return true;
+}
+
+bool AppConfigManager::checkDirectoryExists(bool showMessage,
+                                            std::string directoryPath,
+                                            std::string directoryType){
+    if(!QDir(QString::fromStdString(directoryPath)).exists() || directoryPath == ""){
         if(showMessage){
+            std::string errorMessage = "Directory does not exist. Please correct this.";
+            if (directoryType != "") errorMessage = directoryType + " Directory does not exist. Please correct this.";
             QMessageBox::critical(nullptr,
                                   "Error",
-                                  "Source Directory does not exist. Please correct this.",
+                                  QString::fromStdString(errorMessage),
                                   QMessageBox::Ok);
         }
         return false;

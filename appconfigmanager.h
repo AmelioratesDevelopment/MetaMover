@@ -24,6 +24,8 @@ public:
     AppConfig& config; // Reference to AppConfig instance
     explicit AppConfigManager(AppConfig& config);
     bool scanConfigurationValid(bool showMessage);
+    bool copyConfigurationValid(bool showMessage);
+    bool checkDirectoryExists(bool showMessage, std::string directoryPath, std::string directoryType = "");
     static std::string getExecutablePath();
     static std::string getDefaultConfigPath();
     void save(const std::string& filePath = getDefaultConfigPath());

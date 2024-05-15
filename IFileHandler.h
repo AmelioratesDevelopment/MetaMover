@@ -1,6 +1,8 @@
 #ifndef IFILEHANDLER_H
 #define IFILEHANDLER_H
 
+#include <string>
+
 /***********************************************************************
  * File Name: ifilehandler.h
  * Author(s): Blake Azuela
@@ -18,6 +20,10 @@
 class IFileHandler{
 public:
     virtual void processFile() = 0;
+    virtual std::string getSourceFilePath() = 0;
+    virtual std::string getSourceFileName() = 0;
+    virtual std::string getTargetFileName() = 0;
+    virtual void setTargetFileName(std::string targetFileName) = 0;
     virtual ~IFileHandler() = default;
 };
 

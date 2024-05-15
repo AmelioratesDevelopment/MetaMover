@@ -19,11 +19,14 @@
 #include "metamovermainwindow.h"
 #include "./ui_metamovermainwindow.h"
 
-MetaMoverMainWindow::MetaMoverMainWindow(Scanner* scanner, QWidget *parent)
+MetaMoverMainWindow::MetaMoverMainWindow(Scanner* scanner,
+                                         TransferManager *transferManager,
+                                         QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MetaMoverMainWindow),
     appConfigManager(AppConfig::get()),
-    appScanner(scanner)
+    appScanner(scanner),
+    transferManager(transferManager)
 {
     lockSlots = true;
     ui->setupUi(this);
@@ -201,6 +204,7 @@ void MetaMoverMainWindow::setIfDuplicatesFoundSelection(std::string optionSelect
     bool moveToFolderSelected = (optionSelected != "Move To Folder");
     ui->labelDuplicatesDir->setDisabled(moveToFolderSelected);
     ui->lineEditDuplicatesDir->setDisabled(moveToFolderSelected);
+    ui->lineEditDuplicatesDir->setReadOnly(moveToFolderSelected);
     ui->pushButtonDuplicatesDirBrowse->setDisabled(moveToFolderSelected);
     if(appConfigManager.config.getDuplicatesFoundSelection() != optionSelected){
         appConfigManager.config.setDuplicatesFoundSelection(optionSelected);
@@ -384,5 +388,21 @@ void MetaMoverMainWindow::on_pushButtonScan_clicked()
     resetScanResults();
     emit startScan(appConfigManager.config.getSourceDirectory(),
                     appConfigManager.config.getIncludeSubDirectories());
+}
+
+
+void MetaMoverMainWindow::on_pushButtonPhotoCopy_clicked()
+{
+    if(!appConfigManager.copyConfigurationValid(true)){ return; }
+    if(!appScanner->checkScanResults(true)){ return; }
+    transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers());
+}
+
+
+void MetaMoverMainWindow::on_pushButtonPhotoMove_clicked()
+{
+    if(!appConfigManager.copyConfigurationValid(true)){ return; }
+    if(!appScanner->checkScanResults(true)){ return; }
+    transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers(), true);
 }
 
