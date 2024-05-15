@@ -19,6 +19,8 @@ set(PROJECT_SOURCES
         metamovermainwindow.cpp
         metamovermainwindow.h
         metamovermainwindow.ui
+        exif.cpp    # Added exif source file
+        exif.h      # Added exif header file
         ${TS_FILES}
 )
 
@@ -34,6 +36,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         scanner.h scanner.cpp
         videofilehandler.h videofilehandler.cpp
         ifilehandler.h
+        filehandlerfactory.h
+        transfermanager.h transfermanager.cpp
+        directorytransfer.h directorytransfer.cpp
     )
 
 # Define target properties for Android with Qt 6 as:

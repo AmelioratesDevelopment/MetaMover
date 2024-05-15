@@ -1,5 +1,17 @@
+/***********************************************************************
+ * File Name: main.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: This file sets up the QApplication for the MetaMover project,
+ *              loads language translations, and initializes the main GUI
+ *              window and scanner functionality on separate threads to
+ *              enhance UI responsiveness.
+ * License: MIT License
+ ***********************************************************************/
+
 #include "metamovermainwindow.h"
 #include "scanner.h"
+#include "transfermanager.h"
 
 #include <QApplication>
 #include <QLocale>
@@ -26,16 +38,25 @@ int main(int argc, char *argv[])
     scanner->moveToThread(&scannerThread);
     scannerThread.start();
 
+    // Set up the transfer manager on its own thread
+    QThread transferManagerThread;
+    TransferManager *transferManager = new TransferManager(); // Configure with desired thread pool size
+    transferManager->moveToThread(&transferManagerThread);
+    transferManagerThread.start();
+
     // Pass the scanner to the main window
-    MetaMoverMainWindow w(scanner);
+    MetaMoverMainWindow w(scanner, transferManager);
     w.show();
 
     int execResult = a.exec();
 
-    // Clean up the thread
+    // Clean up the threads
     scannerThread.quit();
     scannerThread.wait();
     delete scanner;
+    transferManagerThread.quit();
+    transferManagerThread.wait();
+    delete transferManager;
 
     return execResult;
 }

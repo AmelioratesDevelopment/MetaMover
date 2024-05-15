@@ -1,9 +1,22 @@
 #ifndef METAMOVERMAINWINDOW_H
 #define METAMOVERMAINWINDOW_H
 
+/***********************************************************************
+ * File Name: MetaMoverMainWindow.h
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Header file for the MetaMoverMainWindow class, which manages
+ *              the user interface for the MetaMover application. This class
+ *              includes setups for UI components, event handling for user
+ *              interactions, and configurations for file and directory
+ *              management options within the UI.
+ * License: MIT License
+ ***********************************************************************/
+
 #include <QMainWindow>
 #include <QDir>
 #include "scanner.h"
+#include "transfermanager.h"
 #include "appconfigmanager.h"
 
 QT_BEGIN_NAMESPACE
@@ -21,14 +34,19 @@ private:
     Ui::MetaMoverMainWindow *ui;
     AppConfigManager appConfigManager;
     Scanner *appScanner;
+    TransferManager *transferManager;
     bool lockSlots;
 
     // Class Functions
     void setupUiElements();
     void setupIfDuplicatesFoundOptions();
     void setupMediaOutputFolderStructureOptions();
+    void resetScanResults();
+    void toggleScanControls(bool enabled);
+    void toggleTransferControls(bool enabled);
     void loadAppConfig();
     void saveAppConfig();
+    void updateFileCounts();
     std::string launchDirectoryBrowser(std::string dialogTitle,
                                        std::string failMsg,
                                        std::string startingDir = QDir::homePath().toStdString());
@@ -49,11 +67,14 @@ signals:
     void startScan(const std::string& directoryPath, bool includeSubdirectories);
 
 public:
-    explicit MetaMoverMainWindow(Scanner* scanner, QWidget *parent = nullptr);
+    explicit MetaMoverMainWindow(Scanner* scanner, TransferManager *transferManager, QWidget *parent = nullptr);
     ~MetaMoverMainWindow();
 
 private slots:
-    void updateFileCountUI(int filesFound);
+    void updateFileCountUI();
+    void showScanResults();
+
+    //ui triggers
     void on_pushButtonBrowseSource_clicked();
     void on_pushButtonBrowseOutput_clicked();
     void on_checkBoxInvalidMetaMove_clicked();
@@ -67,5 +88,6 @@ private slots:
     void on_checkBoxPhotoReplaceDashesWithUnderScores_clicked();
     void on_pushButtonScan_clicked();
 
+    void on_pushButtonPhotoCopy_clicked();
 };
 #endif // METAMOVERMAINWINDOW_H

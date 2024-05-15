@@ -1,21 +1,25 @@
 #ifndef APPCONFIG_H
 #define APPCONFIG_H
 
+/***********************************************************************
+ * File Name: appconfig.h
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Header file for the AppConfig class, designed as a singleton
+ *              to maintain a single instance of application configuration data.
+ *              This class provides a central point of access and management for
+ *              all configurable aspects of the application, such as directories,
+ *              file handling preferences, and UI settings, ensuring consistent
+ *              application behavior. The singleton pattern is chosen to prevent
+ *              multiple instantiations and provide global access.
+ * License: MIT License
+ ***********************************************************************/
+
+
 #include <string>
 #include <vector>
-
-/*****************************
- * Author: Blake Azuela
- *
- * This class provide a model to store and operate
- * on the application configuration. Because there
- * should really only be one AppConfig class during
- * runtime this is a good example implementation of
- * the singleton design pattern. I would also like
- * to conceed that singletons are sometimes best
- * replaced with namespaces.
- *
- * *************************/
+#include <QString>
+#include <QDir>
 
 class AppConfig {
 private:
@@ -82,17 +86,21 @@ public:
         ptrInstance = nullptr;
     }
 
+    std::string convertToNativePath(std::string value) const {
+        return QString(QDir::toNativeSeparators(QString::fromStdString(value))).toStdString();
+    }
+
     // Getters and Setters for each member variable
-    std::string getSourceDirectory() const { return sourceDirectory; }
+    std::string getSourceDirectory() const { return convertToNativePath(sourceDirectory); }
     void setSourceDirectory(const std::string &value) { sourceDirectory = value; }
 
-    std::string getOutputDirectory() const { return outputDirectory; }
+    std::string getOutputDirectory() const { return convertToNativePath(outputDirectory); }
     void setOutputDirectory(const std::string &value) { outputDirectory = value; }
 
-    std::string getInvalidFileMetaDirectory() const { return invalidFileMetaDirectory; }
+    std::string getInvalidFileMetaDirectory() const { return convertToNativePath(invalidFileMetaDirectory); }
     void setInvalidFileMetaDirectory(const std::string &value) { invalidFileMetaDirectory = value; }
 
-    std::string getDuplicatesDirectory() const { return duplicatesDirectory; }
+    std::string getDuplicatesDirectory() const { return convertToNativePath(duplicatesDirectory); }
     void setDuplicatesDirectory(const std::string &value) { duplicatesDirectory = value; }
 
     std::string getDuplicatesFoundSelection() const { return duplicatesFoundSelection; }

@@ -1,3 +1,15 @@
+/***********************************************************************
+ * File Name: MetaMoverMainWindow.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-06
+ * Description: Implementation of MetaMoverMainWindow class. This file
+ *              handles the instantiation and management of UI components,
+ *              event slots, and the integration of the Scanner functionality
+ *              with the UI, emphasizing the separation of UI management from
+ *              data control logic.
+ * License: MIT License
+ ***********************************************************************/
+
 #include <QFileDialog>
 #include <QString>
 #include <QDir>
@@ -7,11 +19,14 @@
 #include "metamovermainwindow.h"
 #include "./ui_metamovermainwindow.h"
 
-MetaMoverMainWindow::MetaMoverMainWindow(Scanner* scanner, QWidget *parent)
+MetaMoverMainWindow::MetaMoverMainWindow(Scanner* scanner,
+                                         TransferManager *transferManager,
+                                         QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MetaMoverMainWindow),
     appConfigManager(AppConfig::get()),
-    appScanner(scanner)
+    appScanner(scanner),
+    transferManager(transferManager)
 {
     lockSlots = true;
     ui->setupUi(this);
@@ -30,9 +45,11 @@ void MetaMoverMainWindow::setupUiElements()
 {
     connect(this, &MetaMoverMainWindow::startScan, appScanner, &Scanner::scan);
     connect(appScanner, &Scanner::filesFoundUpdated, this, &MetaMoverMainWindow::updateFileCountUI, Qt::QueuedConnection);
+    connect(appScanner, &Scanner::scanCompleted, this, &MetaMoverMainWindow::showScanResults);
     // Initialize Ui Element Models
     this->setupIfDuplicatesFoundOptions();
     this->setupMediaOutputFolderStructureOptions();
+    this->toggleTransferControls(false); //Disable controls that require scan results
 }
 
 void MetaMoverMainWindow::saveAppConfig()
@@ -77,6 +94,48 @@ void MetaMoverMainWindow::setupMediaOutputFolderStructureOptions()
     for(std::string& option : options){
         ui->comboBoxPhotoOutputFolderStructure->addItem(QString::fromStdString(option));
     }
+}
+
+void MetaMoverMainWindow::resetScanResults()
+{
+    ui->lineEditFilesFound->setText(QString::number(0));
+    ui->lineEditPhotoFilesFound->setText(QString::number(0));
+    ui->lineEditPhotoHadEXIFData->setText(QString::number(0));
+    ui->lineEditPhotoHasEXIFDataNoDate->setText(QString::number(0));
+    ui->lineEditPhotoHasEXIFDataWDate->setText(QString::number(0));
+    ui->lineEditVideoFilesFound->setText(QString::number(0));
+    ui->lineEditVideoHadEXIFData->setText(QString::number(0));
+    ui->lineEditVideoHasEXIFDataNoDate->setText(QString::number(0));
+    ui->lineEditVideoHasEXIFDataWDate->setText(QString::number(0));
+}
+
+void MetaMoverMainWindow::toggleScanControls(bool enabled){
+    ui->lineEditSourceDir->setDisabled(!enabled);
+    ui->checkBoxIncludeSubDir->setDisabled(!enabled);
+    ui->checkBoxInvalidMetaMove->setDisabled(!enabled);
+    ui->lineEditInvalidMetaDir->setDisabled(!enabled);
+    ui->lineEditOutputDirectory->setDisabled(!enabled);
+    ui->comboBoxDuplicateSelection->setDisabled(!enabled);
+    ui->lineEditDuplicatesDir->setDisabled(!enabled);
+    ui->pushButtonBrowseSource->setDisabled(!enabled);
+    ui->pushButtonBrowseInvalidMetaDir->setDisabled(!enabled);
+    ui->pushButtonBrowseOutput->setDisabled(!enabled);
+    ui->pushButtonDuplicatesDirBrowse->setDisabled(!enabled);
+    ui->pushButtonScan->setDisabled(!enabled);
+}
+
+void MetaMoverMainWindow::toggleTransferControls(bool enabled)
+{
+    ui->pushButtonCopyAll->setDisabled(!enabled);
+    ui->pushButtonMoveAll->setDisabled(!enabled);
+    ui->pushButtonPhotoCopy->setDisabled(!enabled);
+    ui->pushButtonPhotoMove->setDisabled(!enabled);
+    ui->pushButtonVideoCopy->setDisabled(!enabled);
+    ui->pushButtonVideoMove->setDisabled(!enabled);
+    ui->groupBoxVideoFileTypesToMoveOrCopy->setDisabled(!enabled);
+    ui->groupBoxVideoCameraTypesToMoveOrCopy->setDisabled(!enabled);
+    ui->groupBoxPhotoFileTypesToMoveOrCopy->setDisabled(!enabled);
+    ui->groupBoxPhotoCameraTypesToMoveOrCopy->setDisabled(!enabled);
 }
 
 void MetaMoverMainWindow::setSourceDirectory(std::string selectedFolder)
@@ -145,6 +204,7 @@ void MetaMoverMainWindow::setIfDuplicatesFoundSelection(std::string optionSelect
     bool moveToFolderSelected = (optionSelected != "Move To Folder");
     ui->labelDuplicatesDir->setDisabled(moveToFolderSelected);
     ui->lineEditDuplicatesDir->setDisabled(moveToFolderSelected);
+    ui->lineEditDuplicatesDir->setReadOnly(moveToFolderSelected);
     ui->pushButtonDuplicatesDirBrowse->setDisabled(moveToFolderSelected);
     if(appConfigManager.config.getDuplicatesFoundSelection() != optionSelected){
         appConfigManager.config.setDuplicatesFoundSelection(optionSelected);
@@ -202,10 +262,24 @@ std::string MetaMoverMainWindow::launchDirectoryBrowser(std::string dialogTitle,
 
 
 // observer functions
-void MetaMoverMainWindow::updateFileCountUI(int filesFound) {
-    QMetaObject::invokeMethod(this, [this, filesFound]() {
-            ui->lineEditFilesFound->setText(QString::number(filesFound));
+void MetaMoverMainWindow::updateFileCountUI() {
+    QMetaObject::invokeMethod(this, [this]() {
+            updateFileCounts();
         }, Qt::QueuedConnection);
+}
+
+void MetaMoverMainWindow::showScanResults() {
+    toggleTransferControls(true);
+    toggleScanControls(true);
+    updateFileCounts();
+}
+
+void MetaMoverMainWindow::updateFileCounts(){
+    ui->lineEditFilesFound->setText(QString::number(appScanner->getTotalFilesFound()));
+    ui->lineEditPhotoFilesFound->setText(QString::number(appScanner->getTotalPhotoFilesFound()));
+    ui->lineEditPhotoHadEXIFData->setText(QString::number(appScanner->getPhotoFilesFoundContainingEXIFData()));
+    ui->lineEditPhotoHasEXIFDataWDate->setText(QString::number(appScanner->getPhotoFilesFoundContainingValidCreationDate()));
+    ui->lineEditPhotoHasEXIFDataNoDate->setText(QString::number(appScanner->getPhotoFilesFoundContainingEXIFWODate()));
 }
 
 
@@ -310,7 +384,25 @@ void MetaMoverMainWindow::on_checkBoxPhotoReplaceDashesWithUnderScores_clicked()
 void MetaMoverMainWindow::on_pushButtonScan_clicked()
 {
     if(!appConfigManager.scanConfigurationValid(true)){ return; }
+    toggleScanControls(false);
+    resetScanResults();
     emit startScan(appConfigManager.config.getSourceDirectory(),
                     appConfigManager.config.getIncludeSubDirectories());
+}
+
+
+void MetaMoverMainWindow::on_pushButtonPhotoCopy_clicked()
+{
+    if(!appConfigManager.copyConfigurationValid(true)){ return; }
+    if(!appScanner->checkScanResults(true)){ return; }
+    transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers());
+}
+
+
+void MetaMoverMainWindow::on_pushButtonPhotoMove_clicked()
+{
+    if(!appConfigManager.copyConfigurationValid(true)){ return; }
+    if(!appScanner->checkScanResults(true)){ return; }
+    transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers(), true);
 }
 
