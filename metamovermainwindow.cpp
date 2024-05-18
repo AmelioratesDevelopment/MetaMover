@@ -44,8 +44,10 @@ MetaMoverMainWindow::~MetaMoverMainWindow()
 void MetaMoverMainWindow::setupUiElements()
 {
     connect(this, &MetaMoverMainWindow::startScan, appScanner, &Scanner::scan);
+    connect(transferManager, &TransferManager::transferProgress, this, &MetaMoverMainWindow::updateTransferProgress, Qt::QueuedConnection);
     connect(appScanner, &Scanner::filesFoundUpdated, this, &MetaMoverMainWindow::updateFileCountUI, Qt::QueuedConnection);
     connect(appScanner, &Scanner::scanCompleted, this, &MetaMoverMainWindow::showScanResults);
+    connect(transferManager, &TransferManager::finished, this, &MetaMoverMainWindow::onTransferFinished, Qt::QueuedConnection);
     // Initialize Ui Element Models
     this->setupIfDuplicatesFoundOptions();
     this->setupMediaOutputFolderStructureOptions();
@@ -103,10 +105,6 @@ void MetaMoverMainWindow::resetScanResults()
     ui->lineEditPhotoHadEXIFData->setText(QString::number(0));
     ui->lineEditPhotoHasEXIFDataNoDate->setText(QString::number(0));
     ui->lineEditPhotoHasEXIFDataWDate->setText(QString::number(0));
-    ui->lineEditVideoFilesFound->setText(QString::number(0));
-    ui->lineEditVideoHadEXIFData->setText(QString::number(0));
-    ui->lineEditVideoHasEXIFDataNoDate->setText(QString::number(0));
-    ui->lineEditVideoHasEXIFDataWDate->setText(QString::number(0));
 }
 
 void MetaMoverMainWindow::toggleScanControls(bool enabled){
@@ -126,16 +124,8 @@ void MetaMoverMainWindow::toggleScanControls(bool enabled){
 
 void MetaMoverMainWindow::toggleTransferControls(bool enabled)
 {
-    ui->pushButtonCopyAll->setDisabled(!enabled);
-    ui->pushButtonMoveAll->setDisabled(!enabled);
     ui->pushButtonPhotoCopy->setDisabled(!enabled);
     ui->pushButtonPhotoMove->setDisabled(!enabled);
-    ui->pushButtonVideoCopy->setDisabled(!enabled);
-    ui->pushButtonVideoMove->setDisabled(!enabled);
-    ui->groupBoxVideoFileTypesToMoveOrCopy->setDisabled(!enabled);
-    ui->groupBoxVideoCameraTypesToMoveOrCopy->setDisabled(!enabled);
-    ui->groupBoxPhotoFileTypesToMoveOrCopy->setDisabled(!enabled);
-    ui->groupBoxPhotoCameraTypesToMoveOrCopy->setDisabled(!enabled);
 }
 
 void MetaMoverMainWindow::setSourceDirectory(std::string selectedFolder)
@@ -268,6 +258,18 @@ void MetaMoverMainWindow::updateFileCountUI() {
         }, Qt::QueuedConnection);
 }
 
+void MetaMoverMainWindow::updateTransferProgress() {
+    QMetaObject::invokeMethod(this, [this]() {
+            ui->progressBarFileProgress->setValue(transferManager->getTransferProgress());
+        }, Qt::QueuedConnection);
+}
+
+void MetaMoverMainWindow::onTransferFinished() {
+    toggleTransferControls(true);
+    toggleScanControls(true);
+    // Perform any additional actions needed when the transfer process is finished
+}
+
 void MetaMoverMainWindow::showScanResults() {
     toggleTransferControls(true);
     toggleScanControls(true);
@@ -281,7 +283,6 @@ void MetaMoverMainWindow::updateFileCounts(){
     ui->lineEditPhotoHasEXIFDataWDate->setText(QString::number(appScanner->getPhotoFilesFoundContainingValidCreationDate()));
     ui->lineEditPhotoHasEXIFDataNoDate->setText(QString::number(appScanner->getPhotoFilesFoundContainingEXIFWODate()));
 }
-
 
 // ui slots
 void MetaMoverMainWindow::on_pushButtonBrowseSource_clicked()
@@ -395,6 +396,7 @@ void MetaMoverMainWindow::on_pushButtonPhotoCopy_clicked()
 {
     if(!appConfigManager.copyConfigurationValid(true)){ return; }
     if(!appScanner->checkScanResults(true)){ return; }
+    transferManager->moveFiles = false;
     transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers());
 }
 
@@ -403,6 +405,14 @@ void MetaMoverMainWindow::on_pushButtonPhotoMove_clicked()
 {
     if(!appConfigManager.copyConfigurationValid(true)){ return; }
     if(!appScanner->checkScanResults(true)){ return; }
-    transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers(), true);
+    transferManager->moveFiles = true;
+    transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers());
+}
+
+
+
+void MetaMoverMainWindow::on_pushButtonCancel_clicked()
+{
+    appScanner->cancelScan = true;
 }
 

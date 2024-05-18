@@ -15,6 +15,8 @@
 
 
 #include <QObject>
+#include <QTimer>
+#include <QThread>
 #include <vector>
 #include <memory>
 #include <string>
@@ -29,6 +31,7 @@ class Scanner : public QObject {
 public:
     explicit Scanner(QObject* parent = nullptr);
     bool checkScanResults(bool showMessage);
+    bool cancelScan;
     std::string sanitizeFilePath(const std::string& path);
     std::vector<std::unique_ptr<PhotoFileHandler>>& getPhotoFileHandlers();
     std::vector<std::unique_ptr<PhotoFileHandler>>& getInvalidPhotoFileHandlers();
@@ -38,6 +41,10 @@ public:
     int const getPhotoFilesFoundContainingValidCreationDate();
     int const getPhotoFilesFoundContainingEXIFWODate();
     ~Scanner();
+
+private slots:
+    void emitFilesFoundUpdated();
+    void processScan();
 
 public slots:
     void scan(const std::string& directoryPath, bool includeSubdirectories);
@@ -49,19 +56,23 @@ signals:
 
 private:
     void scanDirectory(const std::string& directoryPath, bool includeSubdirectories);
-    std::string escapeBackslashes(const std::string& input);
     void emitPeriodically();
+    std::string escapeBackslashes(const std::string& input);
     std::atomic<int> filesFound{0};
     std::atomic<int> photoFilesFoundContainingEXIFData{0};
     std::atomic<int> photoFilesFoundContainingValidCreationDate{0};
     std::atomic<int> photoFilesFoundContainingEXIFWODate{0};
+    std::atomic<bool> stopTimer;
     std::vector<std::unique_ptr<BasicFileHandler>> basicFileHandlers;
     std::vector<std::unique_ptr<PhotoFileHandler>> photoFileHandlers;
     std::vector<std::unique_ptr<PhotoFileHandler>> invalidPhotoFileHandlers;
     std::vector<std::unique_ptr<VideoFileHandler>> videoFileHandlers;
     std::mutex mutex;
-    std::atomic<bool> stopTimer;
+
     FileFactory fileFactory;
+    QTimer* progressTimer;
+    std::string directoryPath;
+    bool includeSubdirectories;
 };
 
 #endif // SCANNER_H

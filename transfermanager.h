@@ -1,9 +1,13 @@
 #ifndef TRANSFERMANAGER_H
 #define TRANSFERMANAGER_H
 
+#include <QObject>
+#include <QTimer>
+#include <QThread>
+#include <QDir>
+#include <QString>
 #include <vector>
 #include <memory>
-#include <QObject>
 #include "photofilehandler.h"
 #include "directorytransfer.h"
 #include "appconfigmanager.h"
@@ -13,28 +17,39 @@ class TransferManager : public QObject {
 
 public:
     explicit TransferManager(QObject* parent = nullptr);
+    ~TransferManager();
     void processPhotoFiles(std::vector<std::unique_ptr<PhotoFileHandler>> &photoFileHandlers,
-                           std::vector<std::unique_ptr<PhotoFileHandler>> &invalidPhotoFileHandlers,
-                           bool moveFiles = false);
+                           std::vector<std::unique_ptr<PhotoFileHandler>> &invalidPhotoFileHandlers);
+    int const getTransferProgress();
+    bool moveFiles;
+
+signals:
+    void transferProgress(int progress);
+    void finished();
+
+private slots:
+    void emitTransferProgress();
+    void processFiles();
+
+private:
     void processDuplicatePhotoFiles();
-    void findDuplicatePhotoFiles(std::vector<DirectoryTransfer> photoFileHandlers);
-    void addDirectoryTransfers(std::vector<std::unique_ptr<PhotoFileHandler>> &photoFileHandlers,
-                              std::string outputDirectory = "");
     void addDuplicateTransfers(std::vector<std::unique_ptr<PhotoFileHandler>> &photoFileHandlers);
     void createDirectoryIfNotExists(const std::string& path);
+    void addDirectoryTransfers(std::vector<std::unique_ptr<PhotoFileHandler>> &photoFileHandlers,
+                               std::string outputDirectory = "");
     std::string createNumericalFileName(const std::string& fileName,
                                         const std::string &targetDirectory,
                                         bool forceCopySuffix = false);
-    bool prepareTransfer();
-    bool startTransfers();
-private:
+    std::string generateDirectoryPath(PhotoFileHandler* handler);
+    QTimer* progressTimer;
+    int progressCounter;
     std::map<std::string, DirectoryTransfer> directoryTransferMap;
     std::map<std::string, DirectoryTransfer> duplicatesTransferMap;
     std::vector<DirectoryTransfer> photoTransfers;
-    std::string generateDirectoryPath(PhotoFileHandler* handler);
     DirectoryTransfer invalidPhotoTransfers;
     DirectoryTransfer DuplicatePhotoTransfers;
     AppConfigManager configManager;
+    QThread* workerThread;
 };
 
 #endif // TRANSFERMANAGER_H

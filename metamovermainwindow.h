@@ -72,7 +72,9 @@ public:
 
 private slots:
     void updateFileCountUI();
+    void updateTransferProgress();
     void showScanResults();
+    void onTransferFinished();
 
     //ui triggers
     void on_pushButtonBrowseSource_clicked();
@@ -89,5 +91,7 @@ private slots:
     void on_pushButtonScan_clicked();
 
     void on_pushButtonPhotoCopy_clicked();
+    void on_pushButtonPhotoMove_clicked();
+    void on_pushButtonCancel_clicked();
 };
 #endif // METAMOVERMAINWINDOW_H
