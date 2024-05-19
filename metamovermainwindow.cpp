@@ -324,7 +324,6 @@ void MetaMoverMainWindow::stopPollingTimer() {
 
 void MetaMoverMainWindow::pollingTimerTick() {
     updateFileCounts();
-    qDebug() << transferManager->getTransferProgress();
     ui->progressBarFileProgress->setValue(transferManager->getTransferProgress());
     if(softlyStopPollingTimer){
         if(currentTimerSoftStopCycleCount >= timerSoftStopCycleCount){
