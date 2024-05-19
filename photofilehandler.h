@@ -31,6 +31,7 @@ public:
     std::chrono::system_clock::time_point getOriginalDateTime();
     std::chrono::time_point<std::chrono::system_clock> getFileCreationTime() const;
     std::string getCameraModel();
+    std::string removeWhitespace(const std::string& input);
     easyexif::EXIFInfo getExifData();
     bool overwriteEnabled;
 

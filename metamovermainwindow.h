@@ -15,9 +15,17 @@
 
 #include <QMainWindow>
 #include <QDir>
+#include <QTimer>
+#include <QMetaType>
+#include <vector>
 #include "scanner.h"
 #include "transfermanager.h"
 #include "appconfigmanager.h"
+
+// Type alias
+using PhotoFileHandlerVector = std::vector<std::unique_ptr<PhotoFileHandler>>;
+
+Q_DECLARE_METATYPE(PhotoFileHandlerVector*)
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -36,17 +44,25 @@ private:
     Scanner *appScanner;
     TransferManager *transferManager;
     bool lockSlots;
+    bool softlyStopPollingTimer; //used to softly stop timer
+    int timerSoftStopCycleCount;
+    int currentTimerSoftStopCycleCount;
+    QTimer *pollingTimer;
 
     // Class Functions
     void setupUiElements();
+    void enableScanControls(bool enabled);
+    void enableTransferControls(bool enabled);
     void setupIfDuplicatesFoundOptions();
     void setupMediaOutputFolderStructureOptions();
     void resetScanResults();
-    void toggleScanControls(bool enabled);
-    void toggleTransferControls(bool enabled);
+    void prepForTransfer();
+    void transferCanceled();
     void loadAppConfig();
     void saveAppConfig();
     void updateFileCounts();
+    void startPollingTimer();  // Add startTimer function declaration
+    void stopPollingTimer();
     std::string launchDirectoryBrowser(std::string dialogTitle,
                                        std::string failMsg,
                                        std::string startingDir = QDir::homePath().toStdString());
@@ -65,14 +81,20 @@ private:
 
 signals:
     void startScan(const std::string& directoryPath, bool includeSubdirectories);
+    void startTransfer(std::vector<std::unique_ptr<PhotoFileHandler>> *photoFileHandlers,
+                       std::vector<std::unique_ptr<PhotoFileHandler>> *invalidPhotoFileHandlers,
+                       bool moveFiles = false);
 
 public:
     explicit MetaMoverMainWindow(Scanner* scanner, TransferManager *transferManager, QWidget *parent = nullptr);
     ~MetaMoverMainWindow();
 
 private slots:
-    void updateFileCountUI();
+    //void updateFileCountUI();
+    //void updateTransferProgress();
     void showScanResults();
+    void onTransferFinished();
+    void pollingTimerTick();
 
     //ui triggers
     void on_pushButtonBrowseSource_clicked();
@@ -89,5 +111,7 @@ private slots:
     void on_pushButtonScan_clicked();
 
     void on_pushButtonPhotoCopy_clicked();
+    void on_pushButtonPhotoMove_clicked();
+    void on_pushButtonCancel_clicked();
 };
 #endif // METAMOVERMAINWINDOW_H

@@ -75,8 +75,8 @@ struct FileFactory
     void initializeFileFactories() {
         // Mapping file extensions to their respective factories for photo files
         const std::vector<std::string> photoExtensions = {
-            "jpeg", "jpg", "png", "gif", "bmp", "tiff", "tif", "svg", "webp",
-            "heif", "heic", "raw", "cr2", "nef", "orf", "psd", "ico", "exr"
+            "jpeg", "jpg", "tiff", "tif", "heif", "heic", "raw", "cr2", "nef",
+            "orf"
         };
 
         for (const auto& ext : photoExtensions) {
@@ -85,8 +85,8 @@ struct FileFactory
 
         // Mapping file extensions to their respective factories for video files
         const std::vector<std::string> videoExtensions = {
-            "avi", "flv", "wmv", "mov", "mp4", "m4v", "mpg", "mpeg",
-            "3gp", "mkv", "webm", "vob", "ogg"
+            "mp4", "mov", "avi", "mkv", "3gp", "flv", "wmv", "webm", "m4v",
+            "mpg", "mpeg", "vob", "ogg"
         };
 
         for (const auto& ext : videoExtensions) {
