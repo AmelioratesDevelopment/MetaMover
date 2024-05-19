@@ -1,3 +1,19 @@
+/***********************************************************************
+ * File Name: directorytransfer.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-19
+ * Description: Implementation file for the DirectoryTransfer class. This file
+ *              includes detailed methods for managing file transfers,
+ *              checking for duplicates, and ensuring directory existence.
+ *              By leveraging the STL and filesystem library, it provides
+ *              robust and efficient file operations. The class design follows
+ *              solid principles to ensure maintainability and scalability,
+ *              making it a reliable component in the file management
+ *              system.
+ * License: MIT License
+ ***********************************************************************/
+
+
 #include <filesystem>
 #include <iostream>
 #include "directorytransfer.h"
@@ -57,14 +73,22 @@ bool DirectoryTransfer::movePhotoFileToAnotherVector(const std::unique_ptr<Photo
     return false; // Indicates that no element was found to move.
 }
 
-bool DirectoryTransfer::transferFiles(bool move){
+bool DirectoryTransfer::transferFiles(bool move, bool replaceDashesWithUnderscores){
     // ensure target directory exists
     createDirectoryIfNotExists(targetDirectory);
     // commence copy or move of all files in the list:
     for (const auto& photoHandler : photoFilesToTransfer) {
         // Construct the source and target paths
         std::filesystem::path sourcePath(photoHandler->getSourceFilePath());
-        std::filesystem::path targetPath = std::filesystem::path(targetDirectory) / photoHandler->getTargetFileName();
+        std::filesystem::path targetPath;
+        if(replaceDashesWithUnderscores){
+            std::string targetFilename = photoHandler->getTargetFileName();
+            std::replace(targetFilename.begin(), targetFilename.end(), '-', '_');
+            targetPath = std::filesystem::path(targetDirectory) / targetFilename;
+        }else{
+            targetPath = std::filesystem::path(targetDirectory) / photoHandler->getTargetFileName();
+        }
+
         try {
             if (move) {
                 if (photoHandler->overwriteEnabled || !std::filesystem::exists(targetPath)) {
