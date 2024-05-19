@@ -1,6 +1,21 @@
 #ifndef TRANSFERMANAGER_H
 #define TRANSFERMANAGER_H
 
+/***********************************************************************
+ * File Name: transfermanager.h
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-19
+ * Description: Header file for the TransferManager class, which handles
+ *              the management and transfer of photo files. This
+ *              class leverages modern C++ techniques, including smart pointers
+ *              and atomic operations for thread-safe management of transfer
+ *              processes. The class integrates with the AppConfigManager to
+ *              dynamically adjust configurations and supports signal-slot
+ *              mechanisms for asynchronous operations in Qt.
+ * License: MIT License
+ ***********************************************************************/
+
+
 #include <QObject>
 #include <QTimer>
 #include <QThread>
@@ -18,21 +33,23 @@ class TransferManager : public QObject {
 public:
     explicit TransferManager(QObject* parent = nullptr);
     ~TransferManager();
-    void processPhotoFiles(std::vector<std::unique_ptr<PhotoFileHandler>> &photoFileHandlers,
-                           std::vector<std::unique_ptr<PhotoFileHandler>> &invalidPhotoFileHandlers);
+
     int const getTransferProgress();
-    bool moveFiles;
+    void resetTransferManager();
+    std::atomic<bool> transferRunning{false};
+    std::atomic<bool> cancelTransfer{false};
 
 signals:
-    void transferProgress(int progress);
-    void finished();
+    void transferComplete();
 
-private slots:
-    void emitTransferProgress();
-    void processFiles();
+public slots:
+    void processPhotoFiles(std::vector<std::unique_ptr<PhotoFileHandler>> *photoFileHandlers,
+                           std::vector<std::unique_ptr<PhotoFileHandler>> *invalidPhotoFileHandlers,
+                           bool moveFiles = false);
 
 private:
     void processDuplicatePhotoFiles();
+    void processFileTransfers(bool moveFiles = false);
     void addDuplicateTransfers(std::vector<std::unique_ptr<PhotoFileHandler>> &photoFileHandlers);
     void createDirectoryIfNotExists(const std::string& path);
     void addDirectoryTransfers(std::vector<std::unique_ptr<PhotoFileHandler>> &photoFileHandlers,
@@ -41,8 +58,9 @@ private:
                                         const std::string &targetDirectory,
                                         bool forceCopySuffix = false);
     std::string generateDirectoryPath(PhotoFileHandler* handler);
+    std::string getMonthName(int monthNumber);
     QTimer* progressTimer;
-    int progressCounter;
+    std::atomic<int> progressCounter{0};
     std::map<std::string, DirectoryTransfer> directoryTransferMap;
     std::map<std::string, DirectoryTransfer> duplicatesTransferMap;
     std::vector<DirectoryTransfer> photoTransfers;

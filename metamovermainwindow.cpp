@@ -14,7 +14,6 @@
 #include <QString>
 #include <QDir>
 #include <QMessageBox>
-#include <vector>
 
 #include "metamovermainwindow.h"
 #include "./ui_metamovermainwindow.h"
@@ -26,32 +25,43 @@ MetaMoverMainWindow::MetaMoverMainWindow(Scanner* scanner,
     ui(new Ui::MetaMoverMainWindow),
     appConfigManager(AppConfig::get()),
     appScanner(scanner),
-    transferManager(transferManager)
+    transferManager(transferManager),
+    pollingTimer(new QTimer(this))
 {
+    qRegisterMetaType<PhotoFileHandlerVector*>("PhotoFileHandlerVector*"); // Register the type
     lockSlots = true;
     ui->setupUi(this);
     this->setupUiElements();
     this->loadAppConfig();
     lockSlots = false;
+
+    /* When the polling cycle stops - sometimes it needs a few more cycles
+     * from when cancel is clicked to ensure it's up to date with model changes.
+     * The below count allows the timer to be safely stopped after the cycle count. */
+    timerSoftStopCycleCount = 1;
+    currentTimerSoftStopCycleCount = 0;
 }
 
 MetaMoverMainWindow::~MetaMoverMainWindow()
 {
     this->saveAppConfig();
     delete ui;
+    delete pollingTimer;
 }
 
 void MetaMoverMainWindow::setupUiElements()
 {
+    connect(pollingTimer, &QTimer::timeout, this, &MetaMoverMainWindow::pollingTimerTick);
     connect(this, &MetaMoverMainWindow::startScan, appScanner, &Scanner::scan);
-    connect(transferManager, &TransferManager::transferProgress, this, &MetaMoverMainWindow::updateTransferProgress, Qt::QueuedConnection);
-    connect(appScanner, &Scanner::filesFoundUpdated, this, &MetaMoverMainWindow::updateFileCountUI, Qt::QueuedConnection);
     connect(appScanner, &Scanner::scanCompleted, this, &MetaMoverMainWindow::showScanResults);
-    connect(transferManager, &TransferManager::finished, this, &MetaMoverMainWindow::onTransferFinished, Qt::QueuedConnection);
+    connect(this, &MetaMoverMainWindow::startTransfer, transferManager, &TransferManager::processPhotoFiles);
+    connect(transferManager, &TransferManager::transferComplete, this, &MetaMoverMainWindow::onTransferFinished, Qt::QueuedConnection);
     // Initialize Ui Element Models
     this->setupIfDuplicatesFoundOptions();
     this->setupMediaOutputFolderStructureOptions();
-    this->toggleTransferControls(false); //Disable controls that require scan results
+    this->enableTransferControls(false); //Disable controls that require scan results
+    ui->pushButtonCancel->setDisabled(true);
+    ui->progressBarFileProgress->setDisabled(true);
 }
 
 void MetaMoverMainWindow::saveAppConfig()
@@ -107,7 +117,7 @@ void MetaMoverMainWindow::resetScanResults()
     ui->lineEditPhotoHasEXIFDataWDate->setText(QString::number(0));
 }
 
-void MetaMoverMainWindow::toggleScanControls(bool enabled){
+void MetaMoverMainWindow::enableScanControls(bool enabled){
     ui->lineEditSourceDir->setDisabled(!enabled);
     ui->checkBoxIncludeSubDir->setDisabled(!enabled);
     ui->checkBoxInvalidMetaMove->setDisabled(!enabled);
@@ -120,9 +130,10 @@ void MetaMoverMainWindow::toggleScanControls(bool enabled){
     ui->pushButtonBrowseOutput->setDisabled(!enabled);
     ui->pushButtonDuplicatesDirBrowse->setDisabled(!enabled);
     ui->pushButtonScan->setDisabled(!enabled);
+    ui->pushButtonCancel->setDisabled(enabled);
 }
 
-void MetaMoverMainWindow::toggleTransferControls(bool enabled)
+void MetaMoverMainWindow::enableTransferControls(bool enabled)
 {
     ui->pushButtonPhotoCopy->setDisabled(!enabled);
     ui->pushButtonPhotoMove->setDisabled(!enabled);
@@ -250,30 +261,46 @@ std::string MetaMoverMainWindow::launchDirectoryBrowser(std::string dialogTitle,
     return selectedFolder.toStdString();
 }
 
+void MetaMoverMainWindow::prepForTransfer(){
+    if(!appConfigManager.copyConfigurationValid(true)){ return; }
+    if(!appScanner->checkScanResults(true)){ return; }
+    enableScanControls(false);
+    enableTransferControls(false);
+    startPollingTimer();
+}
+
+void MetaMoverMainWindow::transferCanceled(){
+    enableTransferControls(false);
+    QMessageBox::information(this,"Transfer canceled ",
+                             "Transfer was canceled. \n\nPlease rescan to start another transfer.",
+                             QMessageBox::Ok);
+    enableScanControls(true);
+    updateFileCounts();
+
+}
+
 
 // observer functions
-void MetaMoverMainWindow::updateFileCountUI() {
-    QMetaObject::invokeMethod(this, [this]() {
-            updateFileCounts();
-        }, Qt::QueuedConnection);
-}
-
-void MetaMoverMainWindow::updateTransferProgress() {
-    QMetaObject::invokeMethod(this, [this]() {
-            ui->progressBarFileProgress->setValue(transferManager->getTransferProgress());
-        }, Qt::QueuedConnection);
-}
-
 void MetaMoverMainWindow::onTransferFinished() {
-    toggleTransferControls(true);
-    toggleScanControls(true);
-    // Perform any additional actions needed when the transfer process is finished
+    if(transferManager->cancelTransfer){
+        transferCanceled();
+        return;
+    }
+    QMessageBox::information(this,"Transfer Complete",
+                             "Transfer completed successfully. \n\nPlease rescan to start another transfer.",
+                             QMessageBox::Ok);
+    appScanner->resetScanner();
+    enableTransferControls(false);
+    enableScanControls(true);
+    updateFileCounts();
+    ui->progressBarFileProgress->setValue(0);
+    stopPollingTimer();
 }
 
 void MetaMoverMainWindow::showScanResults() {
-    toggleTransferControls(true);
-    toggleScanControls(true);
-    updateFileCounts();
+    enableScanControls(true);
+    enableTransferControls(!appScanner->cancelScan);
+    stopPollingTimer();
 }
 
 void MetaMoverMainWindow::updateFileCounts(){
@@ -281,7 +308,32 @@ void MetaMoverMainWindow::updateFileCounts(){
     ui->lineEditPhotoFilesFound->setText(QString::number(appScanner->getTotalPhotoFilesFound()));
     ui->lineEditPhotoHadEXIFData->setText(QString::number(appScanner->getPhotoFilesFoundContainingEXIFData()));
     ui->lineEditPhotoHasEXIFDataWDate->setText(QString::number(appScanner->getPhotoFilesFoundContainingValidCreationDate()));
-    ui->lineEditPhotoHasEXIFDataNoDate->setText(QString::number(appScanner->getPhotoFilesFoundContainingEXIFWODate()));
+    ui->lineEditPhotoHasEXIFDataNoDate->setText(QString::number(appScanner->getPhotoFilesUnsupportedFiles()));
+}
+
+// polling timer functions
+void MetaMoverMainWindow::startPollingTimer() {
+    softlyStopPollingTimer = false;
+    pollingTimer->start(100);  // Start timer with 200 ms interval
+}
+
+void MetaMoverMainWindow::stopPollingTimer() {
+    currentTimerSoftStopCycleCount = 0;
+    softlyStopPollingTimer = true;  // Stop the timer
+}
+
+void MetaMoverMainWindow::pollingTimerTick() {
+    updateFileCounts();
+    qDebug() << transferManager->getTransferProgress();
+    ui->progressBarFileProgress->setValue(transferManager->getTransferProgress());
+    if(softlyStopPollingTimer){
+        if(currentTimerSoftStopCycleCount >= timerSoftStopCycleCount){
+            pollingTimer->stop();
+        }
+        else{
+            currentTimerSoftStopCycleCount++;
+        }
+    }
 }
 
 // ui slots
@@ -385,8 +437,10 @@ void MetaMoverMainWindow::on_checkBoxPhotoReplaceDashesWithUnderScores_clicked()
 void MetaMoverMainWindow::on_pushButtonScan_clicked()
 {
     if(!appConfigManager.scanConfigurationValid(true)){ return; }
-    toggleScanControls(false);
+    enableTransferControls(false);
+    enableScanControls(false);
     resetScanResults();
+    startPollingTimer();
     emit startScan(appConfigManager.config.getSourceDirectory(),
                     appConfigManager.config.getIncludeSubDirectories());
 }
@@ -394,25 +448,32 @@ void MetaMoverMainWindow::on_pushButtonScan_clicked()
 
 void MetaMoverMainWindow::on_pushButtonPhotoCopy_clicked()
 {
-    if(!appConfigManager.copyConfigurationValid(true)){ return; }
-    if(!appScanner->checkScanResults(true)){ return; }
-    transferManager->moveFiles = false;
-    transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers());
+    prepForTransfer();
+    emit startTransfer(&appScanner->getPhotoFileHandlers(),
+                       &appScanner->getInvalidPhotoFileHandlers());
 }
 
 
 void MetaMoverMainWindow::on_pushButtonPhotoMove_clicked()
 {
-    if(!appConfigManager.copyConfigurationValid(true)){ return; }
-    if(!appScanner->checkScanResults(true)){ return; }
-    transferManager->moveFiles = true;
-    transferManager->processPhotoFiles(appScanner->getPhotoFileHandlers(), appScanner->getInvalidPhotoFileHandlers());
+    prepForTransfer();
+    emit startTransfer(&appScanner->getPhotoFileHandlers(),
+                       &appScanner->getInvalidPhotoFileHandlers(),
+                       true);
 }
 
 
 
 void MetaMoverMainWindow::on_pushButtonCancel_clicked()
 {
-    appScanner->cancelScan = true;
+    if(appScanner->scanRunning){
+        appScanner->cancelScan = true;
+    }
+    if(transferManager->transferRunning){
+        transferManager->cancelTransfer = true;
+    }
+    enableTransferControls(false);
+    appScanner->resetScanner();
+    stopPollingTimer();
 }
 

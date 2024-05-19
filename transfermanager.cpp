@@ -1,3 +1,18 @@
+/***********************************************************************
+ * File Name: transfermanager.cpp
+ * Author(s): Blake Azuela
+ * Date Created: 2024-05-19
+ * Description: Implementation file for the TransferManager class. This file
+ *              includes robust methods for processing and transferring photo
+ *              files, managing duplicates, and updating transfer progress.
+ *              Utilizing a thread seperate from the GUI ensures a centralized and
+ *              consistent transfer process. The class is meticulously designed
+ *              to handle multithreading with atomic operations and integrates
+ *              error handling to provide reliability. Additionally, it uses
+ *              standard filesystem operations and regex for file management.
+ * License: MIT License
+ ***********************************************************************/
+
 #include <ctime>
 #include <sstream>
 #include <iostream>
@@ -8,51 +23,51 @@
 
 TransferManager::TransferManager(QObject* parent)
     : QObject(parent), progressCounter(0), configManager(AppConfig::get()) {
-    progressTimer = new QTimer(this);
-    connect(progressTimer, &QTimer::timeout, this, &TransferManager::emitTransferProgress);
 }
 
-TransferManager::~TransferManager() {
-    delete progressTimer;
-}
+TransferManager::~TransferManager() {}
 
-void TransferManager::processPhotoFiles(std::vector<std::unique_ptr<PhotoFileHandler>> &photoFileHandlers,
-                                        std::vector<std::unique_ptr<PhotoFileHandler>> &invalidPhotoFileHandlers){
-    addDirectoryTransfers(photoFileHandlers);
-    processDuplicatePhotoFiles();
-
-    if(configManager.config.getMoveInvalidFileMeta()){
-        addDirectoryTransfers(invalidPhotoFileHandlers, configManager.config.getInvalidFileMetaDirectory());
-    }
-
+void TransferManager::processPhotoFiles(std::vector<std::unique_ptr<PhotoFileHandler>> *photoFileHandlers,
+                                        std::vector<std::unique_ptr<PhotoFileHandler>> *invalidPhotoFileHandlers,
+                                        bool moveFiles){
+    transferRunning = true;
+    cancelTransfer = false;
     progressCounter = 0; // Reset progress
-    // Start the timer to emit progress every 100 milliseconds in the main thread
-    QMetaObject::invokeMethod(progressTimer, "start", Qt::QueuedConnection, Q_ARG(int, 100));
-    processFiles();
+    addDirectoryTransfers(*photoFileHandlers);
+    processDuplicatePhotoFiles();
+    if(configManager.config.getMoveInvalidFileMeta()){
+        addDirectoryTransfers(*invalidPhotoFileHandlers, configManager.config.getInvalidFileMetaDirectory());
+    }
+    processFileTransfers(moveFiles);
+    transferRunning = false;
+    resetTransferManager();
+    emit transferComplete(); // Notify that processing is finished
 }
 
-void TransferManager::processFiles() {
+void TransferManager::processFileTransfers(bool moveFiles) {
     size_t total = directoryTransferMap.size();
     size_t current = 0;
 
     for(auto dt = directoryTransferMap.begin(); dt != directoryTransferMap.end(); ++dt){
-        dt->second.transferFiles(moveFiles);
+        if(cancelTransfer){
+            progressCounter = 0;
+            break;
+        }
+        dt->second.transferFiles(moveFiles, configManager.config.getPhotosReplaceDashesWithUnderscores());
         current++;
         // Calculate progress as a percentage
         progressCounter = static_cast<int>((static_cast<double>(current) / total) * 100);
     }
+}
 
-    // Stop the timer in the main thread once processing is done
-    QMetaObject::invokeMethod(progressTimer, "stop", Qt::QueuedConnection);
-
+void TransferManager::resetTransferManager(){
     // Cleanup
+    progressCounter = 0;
     directoryTransferMap.clear();
     duplicatesTransferMap.clear();
     photoTransfers.clear();
     invalidPhotoTransfers.clear();
     DuplicatePhotoTransfers.clear();
-
-    emit finished(); // Notify that processing is finished
 }
 
 void TransferManager::processDuplicatePhotoFiles(){
@@ -218,12 +233,12 @@ std::string TransferManager::generateDirectoryPath(PhotoFileHandler* handler) {
     }
 
     for (const auto& component : tokens) {
-        if (component == "Camera Model") {
+        if (component == "CameraModel") {
             path += handler->getCameraModel() + "/";
         } else if (component == "Year") {
             path += std::to_string(dateTime.tm_year + 1900) + "/";
         } else if (component == "Month") {
-            path += std::to_string(dateTime.tm_mon + 1) + "/";
+            path += getMonthName(dateTime.tm_mon + 1) + "/";
         } else if (component == "Day") {
             path += std::to_string(dateTime.tm_mday) + "/";
         }
@@ -231,10 +246,32 @@ std::string TransferManager::generateDirectoryPath(PhotoFileHandler* handler) {
     return QString(QDir::toNativeSeparators(QString::fromStdString(path))).toStdString();
 }
 
-int const TransferManager::getTransferProgress() {
-    return progressCounter;
+std::string TransferManager::getMonthName(int monthNumber) {
+    // Map of month numbers to their corresponding month names
+    std::map<int, std::string> monthMap = {
+        {1, "January"},
+        {2, "February"},
+        {3, "March"},
+        {4, "April"},
+        {5, "May"},
+        {6, "June"},
+        {7, "July"},
+        {8, "August"},
+        {9, "September"},
+        {10, "October"},
+        {11, "November"},
+        {12, "December"}
+    };
+
+    // Check if the month number is valid
+    if (monthMap.find(monthNumber) != monthMap.end()) {
+        return monthMap[monthNumber];
+    } else {
+        //  Invalid specification - just return int as string
+        return std::to_string(monthNumber);
+    }
 }
 
-void TransferManager::emitTransferProgress() {
-    emit transferProgress(progressCounter);
+int const TransferManager::getTransferProgress() {
+    return progressCounter.load();
 }

@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <string>
-#include <cstdio> // this includes supports the section below for EXIF output
+// #include <cstdio> this includes supports the section below for EXIF output
 #include <sstream>
 #include <fstream>
 #include <iomanip>
@@ -37,7 +37,7 @@ std::chrono::system_clock::time_point PhotoFileHandler::getOriginalDateTime(){
 }
 
 std::string PhotoFileHandler::getCameraModel(){
-    return cameraModel;
+    return removeWhitespace(cameraModel);
 }
 
 easyexif::EXIFInfo PhotoFileHandler::getExifData(){
@@ -54,6 +54,12 @@ std::chrono::time_point<std::chrono::system_clock> PhotoFileHandler::getFileCrea
         );
 
     return sctp;
+}
+
+std::string PhotoFileHandler::removeWhitespace(const std::string& input) {
+    std::string result = input;
+    result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end());
+    return result;
 }
 
 void PhotoFileHandler::processFile() {

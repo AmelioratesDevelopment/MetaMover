@@ -20,7 +20,6 @@
 #include <memory>
 #include <string>
 #include <atomic>
-#include <mutex>
 #include "basicfilehandler.h"
 #include "filehandlerfactory.h"
 
@@ -30,47 +29,36 @@ class Scanner : public QObject {
 public:
     explicit Scanner(QObject* parent = nullptr);
     bool checkScanResults(bool showMessage);
-    bool cancelScan;
-    std::string sanitizeFilePath(const std::string& path);
+    void resetScanner();
     std::vector<std::unique_ptr<PhotoFileHandler>>& getPhotoFileHandlers();
     std::vector<std::unique_ptr<PhotoFileHandler>>& getInvalidPhotoFileHandlers();
     int const getTotalFilesFound();
     int const getTotalPhotoFilesFound();
     int const getPhotoFilesFoundContainingEXIFData();
     int const getPhotoFilesFoundContainingValidCreationDate();
-    int const getPhotoFilesFoundContainingEXIFWODate();
-    ~Scanner();
-
-private slots:
-    void processScan();
+    int const getPhotoFilesUnsupportedFiles();
+    std::atomic<bool> cancelScan{false};
+    std::atomic<bool> scanRunning{false};
+    ~Scanner();    
 
 public slots:
     void scan(const std::string& directoryPath, bool includeSubdirectories);
-    void resetScanner();
-    void handleTimeout();
 
 signals:
-    void filesFoundUpdated(int filesFound);
     void scanCompleted();
 
 private:
     void scanDirectory(const std::string& directoryPath, bool includeSubdirectories);
-    void emitPeriodically();
-    std::string escapeBackslashes(const std::string& input);
+    void processScan();
     std::atomic<int> filesFound{0};
     std::atomic<int> photoFilesFoundContainingEXIFData{0};
     std::atomic<int> photoFilesFoundContainingValidCreationDate{0};
-    std::atomic<int> photoFilesFoundContainingEXIFWODate{0};
+    std::atomic<int> photoFilesUnsupportedFound{0};
     std::vector<std::unique_ptr<BasicFileHandler>> basicFileHandlers;
     std::vector<std::unique_ptr<PhotoFileHandler>> photoFileHandlers;
     std::vector<std::unique_ptr<PhotoFileHandler>> invalidPhotoFileHandlers;
     std::vector<std::unique_ptr<VideoFileHandler>> videoFileHandlers;
-    std::mutex mutex;
-
     FileFactory fileFactory;
-    QTimer* progressTimer;
-    std::string directoryPath;
-    bool includeSubdirectories;
 };
 
 #endif // SCANNER_H
