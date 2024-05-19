@@ -16,7 +16,6 @@
 
 #include <QObject>
 #include <QTimer>
-#include <QThread>
 #include <vector>
 #include <memory>
 #include <string>
@@ -43,12 +42,12 @@ public:
     ~Scanner();
 
 private slots:
-    void emitFilesFoundUpdated();
     void processScan();
 
 public slots:
     void scan(const std::string& directoryPath, bool includeSubdirectories);
     void resetScanner();
+    void handleTimeout();
 
 signals:
     void filesFoundUpdated(int filesFound);
@@ -62,7 +61,6 @@ private:
     std::atomic<int> photoFilesFoundContainingEXIFData{0};
     std::atomic<int> photoFilesFoundContainingValidCreationDate{0};
     std::atomic<int> photoFilesFoundContainingEXIFWODate{0};
-    std::atomic<bool> stopTimer;
     std::vector<std::unique_ptr<BasicFileHandler>> basicFileHandlers;
     std::vector<std::unique_ptr<PhotoFileHandler>> photoFileHandlers;
     std::vector<std::unique_ptr<PhotoFileHandler>> invalidPhotoFileHandlers;

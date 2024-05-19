@@ -7,12 +7,15 @@
 #include <atomic>
 #include <iostream>
 
-Scanner::Scanner(QObject* parent) : QObject(parent) {
-    progressTimer = new QTimer(this);
-    connect(progressTimer, &QTimer::timeout, this, &Scanner::emitFilesFoundUpdated);
+Scanner::Scanner(QObject* parent)
+    : QObject(parent), progressTimer(new QTimer(this)) {
+    connect(progressTimer, &QTimer::timeout, this, &Scanner::handleTimeout);
 }
 
 Scanner::~Scanner() {
+    if (progressTimer->isActive()) {
+        progressTimer->stop();
+    }
     delete progressTimer;
 }
 
@@ -27,20 +30,20 @@ void Scanner::scan(const std::string& dirPath, bool includeSubdirs) {
     resetScanner();
     cancelScan = false;
 
-    progressTimer->start(100); // Start the timer to emit progress every 500 milliseconds
+    progressTimer->start(200); // Start the timer to emit progress every 200 milliseconds
     processScan();
 }
 
 void Scanner::processScan() {
     scanDirectory(directoryPath, includeSubdirectories);
-    QMetaObject::invokeMethod(progressTimer, "stop", Qt::QueuedConnection);
+    progressTimer->stop();
     emit filesFoundUpdated(filesFound.load());
     emit scanCompleted();
 }
 
 void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdirectories) {
     for (const auto& entry : std::filesystem::directory_iterator(directoryPath)) {
-        if(cancelScan){
+        if (cancelScan) {
             return;
         }
         std::string path = QString(QDir::toNativeSeparators(QString::fromStdString(entry.path().string()))).toStdString();
@@ -48,33 +51,30 @@ void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdir
             scanDirectory(path, true);
         } else if (!entry.is_directory()) {
             auto handler = fileFactory.makeFileHandler(path);
-            // Use dynamic_cast to check the actual derived type of the handler
             if (auto* pVideoHandler = dynamic_cast<VideoFileHandler*>(handler.get())) {
                 videoFileHandlers.push_back(std::unique_ptr<VideoFileHandler>(pVideoHandler));
             } else if (auto* pPhotoHandler = dynamic_cast<PhotoFileHandler*>(handler.get())) {
-                if(!pPhotoHandler->containsEXIFData){
+                if (!pPhotoHandler->containsEXIFData) {
                     photoFilesFoundContainingEXIFWODate++;
                     invalidPhotoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
                     handler.release();
                     filesFound++;
                     continue;
-                }
-                else{
+                } else {
                     photoFilesFoundContainingEXIFData++;
                 }
-                if(!pPhotoHandler->validCreationDataInEXIF){
+                if (!pPhotoHandler->validCreationDataInEXIF) {
                     photoFilesFoundContainingEXIFWODate++;
                     invalidPhotoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
                     handler.release();
                     filesFound++;
                     continue;
-                }
-                else{
+                } else {
                     photoFilesFoundContainingValidCreationDate++;
                     photoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
                     filesFound++;
                 }
-            } else if (auto* pBasicHandler = dynamic_cast<BasicFileHandler*>(handler.get())) { // fallback to the basic type
+            } else if (auto* pBasicHandler = dynamic_cast<BasicFileHandler*>(handler.get())) {
                 basicFileHandlers.push_back(std::unique_ptr<BasicFileHandler>(pBasicHandler));
                 photoFilesFoundContainingEXIFWODate++;
                 filesFound++;
@@ -82,7 +82,6 @@ void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdir
                 std::cout << "Unknown handler type for file: " << path << std::endl;
                 photoFilesFoundContainingEXIFWODate++;
             }
-
             handler.release();
         }
     }
@@ -95,12 +94,11 @@ void Scanner::resetScanner() {
     invalidPhotoFileHandlers.clear();
 }
 
-bool Scanner::checkScanResults(bool showMessage){
-    if(getTotalFilesFound() <= 0){
-        QMessageBox::critical(nullptr,
-                              "Error",
-                              "No Files Found in Scan.",
-                              QMessageBox::Ok);
+bool Scanner::checkScanResults(bool showMessage) {
+    if (getTotalFilesFound() <= 0) {
+        if (showMessage) {
+            QMessageBox::critical(nullptr, "Error", "No Files Found in Scan.", QMessageBox::Ok);
+        }
         return false;
     }
     return true;
@@ -127,17 +125,17 @@ int const Scanner::getTotalPhotoFilesFound() {
 }
 
 int const Scanner::getPhotoFilesFoundContainingEXIFData() {
-    return photoFilesFoundContainingEXIFData;
+    return photoFilesFoundContainingEXIFData.load();
 }
 
 int const Scanner::getPhotoFilesFoundContainingValidCreationDate() {
-    return photoFilesFoundContainingValidCreationDate;
+    return photoFilesFoundContainingValidCreationDate.load();
 }
 
 int const Scanner::getPhotoFilesFoundContainingEXIFWODate() {
-    return photoFilesFoundContainingEXIFWODate;
+    return photoFilesFoundContainingEXIFWODate.load();
 }
 
-void Scanner::emitFilesFoundUpdated() {
+void Scanner::handleTimeout() {
     emit filesFoundUpdated(filesFound.load());
 }

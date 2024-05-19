@@ -26,7 +26,7 @@ void TransferManager::processPhotoFiles(std::vector<std::unique_ptr<PhotoFileHan
     }
 
     progressCounter = 0; // Reset progress
-    // Start the timer to emit progress every 500 milliseconds in the main thread
+    // Start the timer to emit progress every 100 milliseconds in the main thread
     QMetaObject::invokeMethod(progressTimer, "start", Qt::QueuedConnection, Q_ARG(int, 100));
     processFiles();
 }

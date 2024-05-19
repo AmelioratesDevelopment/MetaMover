@@ -49,7 +49,6 @@ private:
     DirectoryTransfer invalidPhotoTransfers;
     DirectoryTransfer DuplicatePhotoTransfers;
     AppConfigManager configManager;
-    QThread* workerThread;
 };
 
 #endif // TRANSFERMANAGER_H
