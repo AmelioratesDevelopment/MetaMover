@@ -39,6 +39,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         filehandlerfactory.h
         transfermanager.h transfermanager.cpp
         directorytransfer.h directorytransfer.cpp
+        appicon.rc
     )
 
 # Define target properties for Android with Qt 6 as:
@@ -57,6 +58,7 @@ else()
     else()
         add_executable(MetaMover
             ${PROJECT_SOURCES}
+            appicon.rc
         )
     endif()
 
