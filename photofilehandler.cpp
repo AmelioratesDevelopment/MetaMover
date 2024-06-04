@@ -12,6 +12,9 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>
+#include <cctype>
+#include <string>
 // #include <cstdio> this includes supports the section below for EXIF output
 #include <sstream>
 #include <fstream>
@@ -63,7 +66,6 @@ std::string PhotoFileHandler::removeWhitespace(const std::string& input) {
 }
 
 void PhotoFileHandler::processFile() {
-    std::cout << "Processing a photo file: " << filePath << std::endl;
     setTargetFileName();
     extractEXIFData();
 }

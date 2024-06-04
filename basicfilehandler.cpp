@@ -66,6 +66,5 @@ void BasicFileHandler::setTargetFileName(std::string targetFileName) {
 }
 
 void BasicFileHandler::processFile(){
-    std::cout << "Processing a basic file: " << this->filePath << std::endl;
     setTargetFileName();
 }

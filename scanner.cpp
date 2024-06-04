@@ -46,7 +46,6 @@ void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdir
                 videoFileHandlers.push_back(std::unique_ptr<VideoFileHandler>(pVideoHandler));
             } else if (auto* pPhotoHandler = dynamic_cast<PhotoFileHandler*>(handler.get())) {
                 if (!pPhotoHandler->containsEXIFData) {
-                    photoFilesUnsupportedFound++;
                     invalidPhotoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
                     handler.release();
                     filesFound++;
@@ -55,7 +54,6 @@ void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdir
                     photoFilesFoundContainingEXIFData++;
                 }
                 if (!pPhotoHandler->validCreationDataInEXIF) {
-                    photoFilesUnsupportedFound++;
                     invalidPhotoFileHandlers.push_back(std::unique_ptr<PhotoFileHandler>(pPhotoHandler));
                     handler.release();
                     filesFound++;
@@ -67,11 +65,9 @@ void Scanner::scanDirectory(const std::string& directoryPath, bool includeSubdir
                 }
             } else if (auto* pBasicHandler = dynamic_cast<BasicFileHandler*>(handler.get())) {
                 basicFileHandlers.push_back(std::unique_ptr<BasicFileHandler>(pBasicHandler));
-                photoFilesUnsupportedFound++;
                 filesFound++;
             } else {
                 std::cout << "Unknown handler type for file: " << path << std::endl;
-                photoFilesUnsupportedFound++;
             }
             handler.release();
         }
@@ -82,7 +78,6 @@ void Scanner::resetScanner() {
     filesFound = 0;
     photoFilesFoundContainingEXIFData = 0;
     photoFilesFoundContainingValidCreationDate = 0;
-    photoFilesUnsupportedFound = 0;
     basicFileHandlers.clear();
     photoFileHandlers.clear();
     videoFileHandlers.clear();
@@ -116,7 +111,7 @@ int const Scanner::getTotalFilesFound() {
 }
 
 int const Scanner::getTotalPhotoFilesFound() {
-    return static_cast<int>(photoFileHandlers.size());
+    return static_cast<int>(photoFileHandlers.size()+ invalidPhotoFileHandlers.size());
 }
 
 int const Scanner::getPhotoFilesFoundContainingEXIFData() {
@@ -128,5 +123,5 @@ int const Scanner::getPhotoFilesFoundContainingValidCreationDate() {
 }
 
 int const Scanner::getPhotoFilesUnsupportedFiles() {
-    return photoFilesUnsupportedFound.load();
+    return (getTotalFilesFound() - getPhotoFilesFoundContainingValidCreationDate());
 }
