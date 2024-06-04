@@ -21,7 +21,6 @@ set(PROJECT_SOURCES
         metamovermainwindow.ui
         exif.cpp    # Added exif source file
         exif.h      # Added exif header file
-        ifilehandler.h   # Ensure this file is included
         ${TS_FILES}
 )
 
@@ -95,15 +94,14 @@ endif()
 
 
 # CPack configuration
-include(CPack)
-
 set(CPACK_GENERATOR "DEB")
 set(CPACK_PACKAGE_NAME "MetaMover")
-set(CPACK_PACKAGE_VERSION "0.1.1")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Blake Azuela")
 set(CPACK_PACKAGE_CONTACT "Blake Azuela <blake@azuela.info>")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Blake Azuela") # Required
+set(CPACK_PACKAGE_VERSION "0.1.1")
 set(CPACK_PACKAGE_DESCRIPTION "MetaMover Application")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MetaMover aims to organize cluttered DCIM folders, SD cards and cell phones. Essentially, it uses image EXIF data to create a folder structure such as year, month, date and camera model. Your images are then organized into the said structure. It handles duplicates really well and can place images that don't contain EXIF data into a separate folder.")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a, libqt5gui5, libqt5widgets5, libqt5concurrent5, libqt5network5, libstdc++6, libgcc1, libc6, zlib1g, libgl1-mesa-glx, libglib2.0-0, libsm6, libxi6, libxrender1, libxrandr2, libfreetype6, libfontconfig1")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6gui6, libqt6widgets6, libqt6concurrent6, libqt6network6, libstdc++6, libgcc1, libc6, zlib1g, libgl1-mesa-glx, libglib2.0-0, libsm6, libxi6, libxrender1, libxrandr2, libfreetype6, libfontconfig1")
+include(CPack)
 
 install(TARGETS MetaMover DESTINATION /usr/local/bin)
