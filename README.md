@@ -7,14 +7,14 @@ MetaMover is a C++/Qt application designed to organize and manage photo files. I
 
 ## Introduction
 
-MetaMover is a tool that addresses the common issue of cluttered photo directories. By scanning specified source directories, it identifies photo files, processes EXIF data, handles duplicates, and organizes photos into structured folders. This tool is perfect for users looking to transfer photos to organized directories efficiently.
+MetaMover is a tool that addresses the common issue of cluttered photo directories. By scanning specified source directories, it identifies photo files, processes EXIF data, handles duplicates and organizes photos into structured folders. This tool is perfect for users looking to transfer photos to organized directories efficiently.
 
 ## Usage
 
 To get started with MetaMover, follow these steps:
 
 1. **Download and Extract:**
-   - Download the MetaMover zip file from the [GitHub Release Page].(https://github.com/AmelioratesDevelopment/MetaMover/releases).
+   - Download the MetaMover zip file from the [GitHub Release Page](https://github.com/AmelioratesDevelopment/MetaMover/releases).
    - Extract the zip file to your preferred location.
 
 2. **Run the Application:**
