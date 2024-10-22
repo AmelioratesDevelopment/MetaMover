@@ -6,7 +6,7 @@
  * Author(s): Blake Azuela
  * Date Created: 2024-05-06
  * Description: Header file for the BasicFileHandler class, which implements
- *              the IFileHandler interface. This class serves as the base class
+ *              the ifilehandler interface. This class serves as the base class
  *              for handling generic files, providing foundational file processing
  *              functionalities. It is extended by specialized handlers for photos
  *              and videos to incorporate specific processing needs.
